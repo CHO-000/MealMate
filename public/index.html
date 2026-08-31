@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MealMate – มื้อดีมีเวลา</title>
+<meta name="description" content="MealMate ช่วยนักศึกษาเลือกมื้ออาหารที่เหมาะกับเวลาและงบประมาณได้เร็วขึ้น">
+<meta name="theme-color" content="#2e7d52">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./assets/icon-192.png">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+
+<header class="app-header">
+  <div class="app-header__inner">
+    <div class="app-brand">
+      <span class="app-brand__logo" aria-hidden="true">🍚</span>
+      <div>
+        <p class="app-brand__title">MealMate</p>
+        <p class="app-brand__subtitle">มื้อดีมีเวลา</p>
+      </div>
+    </div>
+    <p class="app-header__date" id="header-date"></p>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <!-- PAGE A: HOME -->
+  <section class="page" id="page-home" data-page="home" aria-labelledby="home-heading">
+    <h1 id="home-heading" class="sr-only">หน้าแรก</h1>
+
+    <section class="card card--next-meal" aria-labelledby="next-meal-heading">
+      <h2 id="next-meal-heading" class="card__eyebrow">มื้อถัดไป</h2>
+      <p class="next-meal__name" id="next-meal-name">กำลังโหลด...</p>
+      <p class="next-meal__time" id="next-meal-time"></p>
+      <p class="next-meal__countdown" id="next-meal-countdown" aria-live="polite"></p>
+    </section>
+
+    <section class="card" aria-labelledby="summary-heading">
+      <h2 id="summary-heading" class="card__eyebrow">สรุปวันนี้</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <p class="summary-item__value" id="summary-ontime">0/3</p>
+          <p class="summary-item__label">มื้อตรงเวลา</p>
+        </div>
+        <div class="summary-item">
+          <p class="summary-item__value" id="summary-groups">0/5</p>
+          <p class="summary-item__label">อาหาร 5 หมู่</p>
+        </div>
+        <div class="summary-item">
+          <p class="summary-item__value" id="summary-kcal">0 kcal</p>
+          <p class="summary-item__label">พลังงานรวมโดยประมาณ</p>
+        </div>
+      </div>
+      <div class="ai-inline" id="ai-encourage-wrap" hidden>
+        <button type="button" class="btn btn--ghost btn--ai" id="ai-encourage-btn">🤖 ขอกำลังใจจาก AI</button>
+        <p class="ai-note" id="ai-encourage-note" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="quick-actions-wrap" aria-labelledby="quick-actions-heading">
+      <h2 id="quick-actions-heading" class="sr-only">เมนูลัด</h2>
+      <div class="quick-actions">
+        <button type="button" class="quick-action" data-nav="planner">
+          <span class="quick-action__icon" aria-hidden="true">🍱</span>
+          <span>แนะนำเมนู</span>
+        </button>
+        <button type="button" class="quick-action" data-nav="log">
+          <span class="quick-action__icon" aria-hidden="true">📝</span>
+          <span>บันทึกอาหาร</span>
+        </button>
+        <button type="button" class="quick-action" data-nav="progress">
+          <span class="quick-action__icon" aria-hidden="true">📊</span>
+          <span>ดูสรุป</span>
+        </button>
+      </div>
+    </section>
+
+    <p class="disclaimer">ข้อมูลพลังงานและโภชนาการในแอปเป็นค่าประมาณเพื่อการศึกษาเท่านั้น ไม่ใช่การวินิจฉัยหรือคำแนะนำทางการแพทย์ และไม่ควรใช้แทนคำแนะนำจากผู้เชี่ยวชาญด้านสุขภาพ</p>
+  </section>
+
+  <!-- PAGE B: MEAL PLANNER -->
+  <section class="page" id="page-planner" data-page="planner" hidden aria-labelledby="planner-heading">
+    <h1 id="planner-heading" class="page-title">แนะนำเมนู</h1>
+    <p class="page-subtitle">บอกเวลาและงบที่มี เดี๋ยวเราช่วยเลือกให้</p>
+
+    <form id="planner-form" class="card form" novalidate>
+      <div class="field">
+        <label for="planner-meal">มื้ออาหาร</label>
+        <select id="planner-meal" name="meal" required>
+          <option value="">เลือกมื้ออาหาร</option>
+          <option value="breakfast">เช้า</option>
+          <option value="lunch">กลางวัน</option>
+          <option value="dinner">เย็น</option>
+        </select>
+        <p class="field-error" id="error-meal" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="planner-time">เวลาที่มี</label>
+        <select id="planner-time" name="time" required>
+          <option value="">เลือกเวลาที่มี</option>
+          <option value="10">10 นาที</option>
+          <option value="20">20 นาที</option>
+          <option value="30">30 นาที</option>
+          <option value="60">60 นาที</option>
+        </select>
+        <p class="field-error" id="error-time" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="planner-budget">งบสูงสุด (บาท)</label>
+        <input type="number" id="planner-budget" name="budget" inputmode="numeric" min="1" step="1" placeholder="เช่น 50">
+        <p class="field-error" id="error-budget" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="planner-goal">เป้าหมาย</label>
+        <select id="planner-goal" name="goal" required>
+          <option value="">เลือกเป้าหมาย</option>
+          <option value="balanced">สมดุล</option>
+          <option value="protein">โปรตีน</option>
+          <option value="light">เบา</option>
+        </select>
+        <p class="field-error" id="error-goal" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="planner-diet">รูปแบบอาหาร</label>
+        <select id="planner-diet" name="diet" required>
+          <option value="">เลือกรูปแบบอาหาร</option>
+          <option value="general">ทั่วไป</option>
+          <option value="no-pork">ไม่กินหมู</option>
+          <option value="vegetarian">มังสวิรัติ</option>
+        </select>
+        <p class="field-error" id="error-diet" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="planner-exclude">อาหารที่ไม่ต้องการ (ถ้ามี)</label>
+        <input type="text" id="planner-exclude" name="exclude" placeholder="เช่น ถั่ว, นม, ไข่">
+        <p class="field-hint">คั่นด้วยเครื่องหมายจุลภาค เว้นว่างได้ถ้าไม่มี</p>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--full">แนะนำเมนูให้ฉัน</button>
+    </form>
+
+    <section id="planner-results" class="planner-results" aria-live="polite"></section>
+
+    <section class="ai-block" id="ai-suggest-wrap" hidden aria-labelledby="ai-suggest-heading">
+      <h2 id="ai-suggest-heading" class="sr-only">คำอธิบายจาก AI</h2>
+      <button type="button" class="btn btn--ghost btn--ai btn--full" id="ai-suggest-btn">🤖 ให้ AI ช่วยอธิบายเมนูเหล่านี้</button>
+      <p class="ai-note" id="ai-suggest-note" aria-live="polite"></p>
+    </section>
+  </section>
+
+  <!-- PAGE C: FOOD LOG -->
+  <section class="page" id="page-log" data-page="log" hidden aria-labelledby="log-heading">
+    <h1 id="log-heading" class="page-title">บันทึกอาหาร</h1>
+    <p class="page-subtitle">จดไว้เร็ว ๆ ไม่ต้องกรอกเยอะ</p>
+
+    <form id="log-form" class="card form" novalidate>
+      <div class="field">
+        <label for="log-name">ชื่ออาหาร</label>
+        <input type="text" id="log-name" name="name" placeholder="เช่น ข้าวกะเพราไก่ไข่ดาว">
+        <p class="field-error" id="error-log-name" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="log-meal">มื้อ</label>
+        <select id="log-meal" name="meal" required>
+          <option value="">เลือกมื้อ</option>
+          <option value="breakfast">เช้า</option>
+          <option value="lunch">กลางวัน</option>
+          <option value="dinner">เย็น</option>
+        </select>
+        <p class="field-error" id="error-log-meal" role="alert"></p>
+      </div>
+
+      <div class="field">
+        <label for="log-calories">พลังงานโดยประมาณ (kcal)</label>
+        <input type="number" id="log-calories" name="calories" inputmode="numeric" min="0" step="1" placeholder="เช่น 450">
+        <p class="field-error" id="error-log-calories" role="alert"></p>
+      </div>
+
+      <div class="field field--checkbox">
+        <input type="checkbox" id="log-ontime" name="onTime">
+        <label for="log-ontime">มื้อนี้ตรงเวลา</label>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--full">บันทึกอาหาร</button>
+    </form>
+
+    <section aria-labelledby="log-list-heading">
+      <h2 id="log-list-heading" class="section-title">รายการวันนี้</h2>
+      <ul class="log-list" id="log-list"></ul>
+      <p class="empty-hint" id="log-empty" hidden>ยังไม่มีรายการอาหารวันนี้ เริ่มบันทึกมื้อแรกได้เลย</p>
+    </section>
+  </section>
+
+  <!-- PAGE D: PROGRESS & SETTINGS -->
+  <section class="page" id="page-progress" data-page="progress" hidden aria-labelledby="progress-heading">
+    <h1 id="progress-heading" class="page-title">สรุปและตั้งค่า</h1>
+
+    <section class="card" aria-labelledby="daily-progress-heading">
+      <h2 id="daily-progress-heading" class="card__eyebrow">ความคืบหน้าวันนี้</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <p class="summary-item__value" id="progress-meal-count">0 มื้อ</p>
+          <p class="summary-item__label">จำนวนมื้อวันนี้</p>
+        </div>
+        <div class="summary-item">
+          <p class="summary-item__value" id="progress-ontime">0/0</p>
+          <p class="summary-item__label">ตรงเวลา</p>
+        </div>
+        <div class="summary-item">
+          <p class="summary-item__value" id="progress-percent">0%</p>
+          <p class="summary-item__label">คิดเป็น</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="groups-heading">
+      <h2 id="groups-heading" class="card__eyebrow">อาหาร 5 หมู่วันนี้</h2>
+      <p class="field-hint">แตะเพื่อบันทึกว่าวันนี้กินหมู่ไหนบ้าง</p>
+      <div class="group-toggles" id="group-toggles" role="group" aria-labelledby="groups-heading">
+        <button type="button" class="group-toggle" data-group="carb">🍚 คาร์โบไฮเดรต</button>
+        <button type="button" class="group-toggle" data-group="protein">🍗 โปรตีน</button>
+        <button type="button" class="group-toggle" data-group="veggie">🥦 ผัก</button>
+        <button type="button" class="group-toggle" data-group="fruit">🍎 ผลไม้</button>
+        <button type="button" class="group-toggle" data-group="fat">🥑 ไขมัน</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="settings-heading">
+      <h2 id="settings-heading" class="card__eyebrow">ตั้งเวลามื้ออาหาร</h2>
+      <form id="settings-form" class="form">
+        <div class="field">
+          <label for="setting-breakfast">อาหารเช้า</label>
+          <input type="time" id="setting-breakfast" name="breakfast">
+        </div>
+        <div class="field">
+          <label for="setting-lunch">อาหารกลางวัน</label>
+          <input type="time" id="setting-lunch" name="lunch">
+        </div>
+        <div class="field">
+          <label for="setting-dinner">อาหารเย็น</label>
+          <input type="time" id="setting-dinner" name="dinner">
+        </div>
+        <button type="submit" class="btn btn--primary btn--full">บันทึกเวลา</button>
+        <p class="field-hint" id="settings-saved" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="clear-data-heading">
+      <h2 id="clear-data-heading" class="card__eyebrow">จัดการข้อมูล</h2>
+      <p class="field-hint">ข้อมูลทั้งหมดถูกเก็บไว้ในอุปกรณ์นี้เท่านั้น ไม่ถูกส่งออกไปที่ใด</p>
+      <button type="button" class="btn btn--danger btn--full" id="clear-data-btn">ล้างข้อมูลทั้งหมด</button>
+    </section>
+
+    <p class="disclaimer">ข้อมูลพลังงานและโภชนาการในแอปเป็นค่าประมาณเพื่อการศึกษาเท่านั้น ไม่ใช่การวินิจฉัยหรือคำแนะนำทางการแพทย์ และไม่ควรใช้แทนคำแนะนำจากผู้เชี่ยวชาญด้านสุขภาพ</p>
+  </section>
+
+</main>
+
+<button type="button" class="chat-fab" id="chat-fab" aria-label="เปิดแชทผู้ช่วย AI" aria-haspopup="dialog" aria-expanded="false" hidden>
+  <span aria-hidden="true">💬</span>
+</button>
+
+<div class="chat-panel" id="chat-panel" hidden role="dialog" aria-modal="true" aria-labelledby="chat-panel-title">
+  <div class="chat-panel__header">
+    <p id="chat-panel-title" class="chat-panel__title">🤖 ผู้ช่วย AI เรื่องอาหาร</p>
+    <button type="button" class="chat-panel__close" id="chat-panel-close" aria-label="ปิดแชท">✕</button>
+  </div>
+  <p class="chat-panel__hint">ถามได้ เช่น "มื้อเย็นงบ 40 บาทกินอะไรดี" หรือคำถามเรื่องโภชนาการทั่วไป (ไม่ใช่คำแนะนำทางการแพทย์)</p>
+  <div class="chat-panel__messages" id="chat-messages" aria-live="polite"></div>
+  <form id="chat-form" class="chat-panel__form">
+    <label for="chat-input" class="sr-only">พิมพ์ข้อความ</label>
+    <input type="text" id="chat-input" name="chatInput" placeholder="พิมพ์คำถามของคุณ..." autocomplete="off" maxlength="500">
+    <button type="submit" class="btn btn--primary" id="chat-send">ส่ง</button>
+  </form>
+</div>
+
+<nav class="bottom-nav" aria-label="เมนูหลัก">
+  <button type="button" class="bottom-nav__item is-active" data-nav="home" aria-current="page">
+    <span class="bottom-nav__icon" aria-hidden="true">🏠</span>
+    <span>หน้าแรก</span>
+  </button>
+  <button type="button" class="bottom-nav__item" data-nav="planner">
+    <span class="bottom-nav__icon" aria-hidden="true">🍱</span>
+    <span>แนะนำ</span>
+  </button>
+  <button type="button" class="bottom-nav__item" data-nav="log">
+    <span class="bottom-nav__icon" aria-hidden="true">📝</span>
+    <span>บันทึก</span>
+  </button>
+  <button type="button" class="bottom-nav__item" data-nav="progress">
+    <span class="bottom-nav__icon" aria-hidden="true">📊</span>
+    <span>สรุป</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="dialog-overlay" id="confirm-dialog" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+    <p id="confirm-dialog-title" class="dialog__message"></p>
+    <div class="dialog__actions">
+      <button type="button" class="btn btn--ghost" id="confirm-dialog-cancel">ยกเลิก</button>
+      <button type="button" class="btn btn--danger" id="confirm-dialog-ok">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>

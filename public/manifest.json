@@ -1,0 +1,26 @@
+{
+  "name": "MealMate – มื้อดีมีเวลา",
+  "short_name": "MealMate",
+  "description": "แอปช่วยนักศึกษาเลือกมื้ออาหารให้เหมาะกับเวลาและงบประมาณ พร้อมบันทึกพฤติกรรมการกิน",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#2e7d52",
+  "background_color": "#faf8f3",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
