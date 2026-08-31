@@ -17,6 +17,13 @@
 
   var STORAGE_KEY = "mealmate_state";
 
+  // Supabase project config — safe to expose client-side (protected by
+  // Row Level Security, not by secrecy). Filled in once the project exists;
+  // until then SUPABASE_URL stays a placeholder and account features stay
+  // hidden, so the app runs exactly like the guest-only version.
+  var SUPABASE_URL = "https://rgvtxmlezqdmwmpqlabu.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_iKd8yx34iJq6x7L-rxb05A_soU5vJ1u";
+
   var MEAL_LABELS = {
     breakfast: "มื้อเช้า",
     lunch: "มื้อกลางวัน",
@@ -680,13 +687,19 @@
       emoji: item.emoji
     };
 
-    state.logs.push(log);
-    saveState();
+    persistNewLog(log)
+      .then(function (finalLog) {
+        state.logs.push(finalLog);
+        saveState();
 
-    showToast("บันทึกมื้อนี้แล้ว");
-    renderHome();
-    renderLogPage();
-    renderProgressPage();
+        showToast("บันทึกมื้อนี้แล้ว");
+        renderHome();
+        renderLogPage();
+        renderProgressPage();
+      })
+      .catch(function () {
+        showToast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง");
+      });
   }
 
   function handlePlannerSubmit(e) {
@@ -801,15 +814,21 @@
       emoji: mealEmoji(data.meal)
     };
 
-    state.logs.push(log);
-    saveState();
+    persistNewLog(log)
+      .then(function (finalLog) {
+        state.logs.push(finalLog);
+        saveState();
 
-    document.getElementById("log-form").reset();
-    showToast("บันทึกอาหารแล้ว");
+        document.getElementById("log-form").reset();
+        showToast("บันทึกอาหารแล้ว");
 
-    renderHome();
-    renderLogPage();
-    renderProgressPage();
+        renderHome();
+        renderLogPage();
+        renderProgressPage();
+      })
+      .catch(function () {
+        showToast("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง");
+      });
   }
 
   function renderLogPage() {
@@ -862,6 +881,7 @@
     renderHome();
     renderProgressPage();
     showToast("ลบรายการแล้ว");
+    deleteLogRemote(logId);
   }
 
   /* ------------------------------------------------------------------ */
@@ -903,6 +923,7 @@
     saveState();
     renderGroupToggles();
     renderHome();
+    upsertGroupsRemote(state.groupsSelected);
   }
 
   function renderSettingsForm() {
@@ -919,6 +940,7 @@
 
     state.settings = { breakfast: breakfast, lunch: lunch, dinner: dinner };
     saveState();
+    upsertSettingsRemote(state.settings);
 
     var savedMsg = document.getElementById("settings-saved");
     savedMsg.textContent = "บันทึกเวลามื้ออาหารแล้ว";
@@ -1199,6 +1221,331 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Accounts (optional — Supabase auth + database)                     */
+  /* Guest mode (signed out, or Supabase not configured) keeps working  */
+  /* exactly as before: everything lives in localStorage on this device.*/
+  /* Signed in: the same actions also read/write Supabase, so data      */
+  /* follows the account across devices. Local state stays the source   */
+  /* of truth for rendering either way — Supabase just feeds it.        */
+  /* ------------------------------------------------------------------ */
+
+  var supabaseClient = null;
+  var currentUser = null;
+  var authMode = "signin";
+
+  function isSupabaseConfigured() {
+    return (
+      SUPABASE_URL.indexOf("PLACEHOLDER") === -1 &&
+      SUPABASE_ANON_KEY.indexOf("PLACEHOLDER") === -1
+    );
+  }
+
+  function initSupabaseClient() {
+    if (!isSupabaseConfigured()) return;
+    if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+      console.warn("[supabase] SDK failed to load — account features disabled, guest mode only.");
+      return;
+    }
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      console.warn("[supabase] failed to initialize client", e);
+      supabaseClient = null;
+      return;
+    }
+
+    document.getElementById("account-btn").hidden = false;
+    supabaseClient.auth.onAuthStateChange(handleAuthStateChange);
+  }
+
+  function handleAuthStateChange(event, session) {
+    if (session && session.user) {
+      currentUser = session.user;
+      updateAccountButton();
+      loadRemoteDataForToday()
+        .then(function () {
+          renderAll();
+          if (event === "SIGNED_IN") {
+            closeAuthDialog();
+            showToast("เข้าสู่ระบบสำเร็จ");
+          }
+        })
+        .catch(function () {
+          showToast("เข้าสู่ระบบสำเร็จ แต่ดึงข้อมูลไม่สำเร็จ ลองรีเฟรชหน้าเว็บ");
+        });
+    } else {
+      currentUser = null;
+      updateAccountButton();
+      if (event === "SIGNED_OUT") {
+        state = loadState();
+        renderAll();
+        showToast("ออกจากระบบแล้ว");
+      }
+    }
+  }
+
+  function updateAccountButton() {
+    var btn = document.getElementById("account-btn");
+    if (currentUser) {
+      btn.textContent = currentUser.email || "บัญชีของฉัน";
+      btn.classList.add("is-signed-in");
+    } else {
+      btn.textContent = "เข้าสู่ระบบ";
+      btn.classList.remove("is-signed-in");
+    }
+  }
+
+  function handleAccountBtnClick() {
+    if (currentUser) {
+      confirmDialog("ต้องการออกจากระบบหรือไม่?", function () {
+        supabaseClient.auth.signOut();
+      });
+    } else {
+      openAuthDialog();
+    }
+  }
+
+  function openAuthDialog() {
+    document.getElementById("auth-error").textContent = "";
+    document.getElementById("auth-dialog").hidden = false;
+    document.getElementById("auth-email").focus();
+  }
+
+  function closeAuthDialog() {
+    document.getElementById("auth-dialog").hidden = true;
+    document.getElementById("auth-form").reset();
+    document.getElementById("auth-error").textContent = "";
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    var signinTab = document.getElementById("auth-tab-signin");
+    var signupTab = document.getElementById("auth-tab-signup");
+    var submitBtn = document.getElementById("auth-submit-btn");
+
+    signinTab.classList.toggle("is-active", mode === "signin");
+    signinTab.setAttribute("aria-selected", mode === "signin" ? "true" : "false");
+    signupTab.classList.toggle("is-active", mode === "signup");
+    signupTab.setAttribute("aria-selected", mode === "signup" ? "true" : "false");
+    submitBtn.textContent = mode === "signin" ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
+    document.getElementById("auth-error").textContent = "";
+  }
+
+  function handleAuthSubmit(e) {
+    e.preventDefault();
+    var email = document.getElementById("auth-email").value.trim();
+    var password = document.getElementById("auth-password").value;
+    var errorEl = document.getElementById("auth-error");
+    var submitBtn = document.getElementById("auth-submit-btn");
+
+    errorEl.textContent = "";
+    if (!email || !password) {
+      errorEl.textContent = "กรุณากรอกอีเมลและรหัสผ่าน";
+      return;
+    }
+    if (password.length < 6) {
+      errorEl.textContent = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
+      return;
+    }
+
+    submitBtn.disabled = true;
+
+    var action =
+      authMode === "signin"
+        ? supabaseClient.auth.signInWithPassword({ email: email, password: password })
+        : supabaseClient.auth.signUp({ email: email, password: password });
+
+    action
+      .then(function (result) {
+        if (result.error) {
+          errorEl.textContent = translateAuthError(result.error.message);
+          return;
+        }
+        if (authMode === "signup" && result.data && !result.data.session) {
+          errorEl.textContent = "";
+          closeAuthDialog();
+          showToast("สมัครสำเร็จ! กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ");
+        }
+        // On sign-in (or signup with an immediate session), onAuthStateChange
+        // handles the rest.
+      })
+      .catch(function () {
+        errorEl.textContent = "เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง";
+      })
+      .finally(function () {
+        submitBtn.disabled = false;
+      });
+  }
+
+  function translateAuthError(message) {
+    if (!message) return "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง";
+    if (message.indexOf("Invalid login credentials") !== -1) return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+    if (message.indexOf("already registered") !== -1) return "อีเมลนี้สมัครไว้แล้ว ลองเข้าสู่ระบบแทน";
+    if (message.indexOf("Password should be") !== -1) return "รหัสผ่านสั้นเกินไป";
+    return message;
+  }
+
+  function handleGoogleSignIn() {
+    if (!supabaseClient) return;
+    supabaseClient.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin }
+    });
+  }
+
+  function mapRemoteLog(row) {
+    return {
+      id: row.id,
+      date: row.log_date,
+      name: row.name,
+      meal: row.meal,
+      calories: row.calories,
+      onTime: row.on_time,
+      emoji: row.emoji
+    };
+  }
+
+  function loadRemoteDataForToday() {
+    if (!currentUser || !supabaseClient) return Promise.resolve();
+    var today = todayStr();
+
+    var logsQuery = supabaseClient
+      .from("meal_logs")
+      .select("*")
+      .eq("log_date", today)
+      .order("created_at", { ascending: true });
+
+    var settingsQuery = supabaseClient
+      .from("user_settings")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    var groupsQuery = supabaseClient
+      .from("daily_groups")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .eq("log_date", today)
+      .maybeSingle();
+
+    return Promise.all([logsQuery, settingsQuery, groupsQuery]).then(function (results) {
+      var logsRes = results[0];
+      var settingsRes = results[1];
+      var groupsRes = results[2];
+
+      if (logsRes.error) throw logsRes.error;
+
+      state.logs = state.logs
+        .filter(function (l) { return l.date !== today; })
+        .concat((logsRes.data || []).map(mapRemoteLog));
+
+      if (!settingsRes.error && settingsRes.data) {
+        state.settings = {
+          breakfast: settingsRes.data.breakfast_time,
+          lunch: settingsRes.data.lunch_time,
+          dinner: settingsRes.data.dinner_time
+        };
+      } else {
+        // First time this account logs in — seed the row from current defaults.
+        upsertSettingsRemote(state.settings);
+      }
+
+      if (!groupsRes.error && groupsRes.data) {
+        state.groupsSelected = groupsRes.data.groups || [];
+      } else {
+        state.groupsSelected = [];
+      }
+      state.groupsDate = today;
+
+      saveState();
+    });
+  }
+
+  function persistNewLog(log) {
+    if (!currentUser || !supabaseClient) return Promise.resolve(log);
+    var row = {
+      user_id: currentUser.id,
+      log_date: log.date,
+      name: log.name,
+      meal: log.meal,
+      calories: log.calories,
+      on_time: log.onTime,
+      emoji: log.emoji || null
+    };
+    return supabaseClient
+      .from("meal_logs")
+      .insert(row)
+      .select()
+      .single()
+      .then(function (res) {
+        if (res.error) throw res.error;
+        return mapRemoteLog(res.data);
+      });
+  }
+
+  function deleteLogRemote(logId) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("meal_logs")
+      .delete()
+      .eq("id", logId)
+      .then(function (res) {
+        if (res.error) console.error("[supabase] delete failed", res.error);
+      });
+  }
+
+  function upsertSettingsRemote(settings) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("user_settings")
+      .upsert(
+        {
+          user_id: currentUser.id,
+          breakfast_time: settings.breakfast,
+          lunch_time: settings.lunch,
+          dinner_time: settings.dinner,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id" }
+      )
+      .then(function (res) {
+        if (res.error) console.error("[supabase] settings upsert failed", res.error);
+      });
+  }
+
+  function upsertGroupsRemote(groups) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("daily_groups")
+      .upsert(
+        {
+          user_id: currentUser.id,
+          log_date: todayStr(),
+          groups: groups,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id,log_date" }
+      )
+      .then(function (res) {
+        if (res.error) console.error("[supabase] groups upsert failed", res.error);
+      });
+  }
+
+  function initAccountFeatures() {
+    initSupabaseClient();
+
+    document.getElementById("account-btn").addEventListener("click", handleAccountBtnClick);
+    document.getElementById("auth-dialog-close").addEventListener("click", closeAuthDialog);
+    document.getElementById("auth-tab-signin").addEventListener("click", function () { setAuthMode("signin"); });
+    document.getElementById("auth-tab-signup").addEventListener("click", function () { setAuthMode("signup"); });
+    document.getElementById("auth-form").addEventListener("submit", handleAuthSubmit);
+    document.getElementById("auth-google-btn").addEventListener("click", handleGoogleSignIn);
+    document.getElementById("auth-dialog").addEventListener("click", function (e) {
+      if (e.target === document.getElementById("auth-dialog")) closeAuthDialog();
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Init                                                                */
   /* ------------------------------------------------------------------ */
 
@@ -1253,6 +1600,7 @@
 
     registerServiceWorker();
     initAiFeatures();
+    initAccountFeatures();
   }
 
   if (document.readyState === "loading") {

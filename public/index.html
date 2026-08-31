@@ -23,7 +23,10 @@
         <p class="app-brand__subtitle">มื้อดีมีเวลา</p>
       </div>
     </div>
-    <p class="app-header__date" id="header-date"></p>
+    <div class="app-header__right">
+      <p class="app-header__date" id="header-date"></p>
+      <button type="button" class="account-btn" id="account-btn" hidden>เข้าสู่ระบบ</button>
+    </div>
   </div>
 </header>
 
@@ -285,6 +288,39 @@
   </form>
 </div>
 
+<div class="dialog-overlay" id="auth-dialog" hidden>
+  <div class="dialog auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
+    <div class="auth-dialog__header">
+      <p id="auth-dialog-title" class="dialog__message">เข้าสู่ระบบ / สมัครสมาชิก</p>
+      <button type="button" class="chat-panel__close" id="auth-dialog-close" aria-label="ปิดหน้าต่างเข้าสู่ระบบ">✕</button>
+    </div>
+    <p class="field-hint">เข้าสู่ระบบเพื่อบันทึกข้อมูลไว้ในระบบ ใช้ได้ทุกอุปกรณ์ ไม่เข้าสู่ระบบก็ใช้แอปได้ปกติ (ข้อมูลจะเก็บไว้ในเครื่องนี้เครื่องเดียว)</p>
+
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="auth-tab is-active" id="auth-tab-signin" role="tab" aria-selected="true">เข้าสู่ระบบ</button>
+      <button type="button" class="auth-tab" id="auth-tab-signup" role="tab" aria-selected="false">สมัครสมาชิก</button>
+    </div>
+
+    <form id="auth-form" class="form">
+      <div class="field">
+        <label for="auth-email">อีเมล</label>
+        <input type="email" id="auth-email" name="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="auth-password">รหัสผ่าน</label>
+        <input type="password" id="auth-password" name="password" required autocomplete="current-password" minlength="6">
+        <p class="field-hint">อย่างน้อย 6 ตัวอักษร</p>
+      </div>
+      <p class="field-error" id="auth-error" role="alert"></p>
+      <button type="submit" class="btn btn--primary btn--full" id="auth-submit-btn">เข้าสู่ระบบ</button>
+    </form>
+
+    <div class="auth-divider"><span>หรือ</span></div>
+
+    <button type="button" class="btn btn--ghost btn--full" id="auth-google-btn">เข้าสู่ระบบด้วย Google</button>
+  </div>
+</div>
+
 <nav class="bottom-nav" aria-label="เมนูหลัก">
   <button type="button" class="bottom-nav__item is-active" data-nav="home" aria-current="page">
     <span class="bottom-nav__icon" aria-hidden="true">🏠</span>
@@ -316,6 +352,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>
