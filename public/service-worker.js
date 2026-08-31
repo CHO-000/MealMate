@@ -5,7 +5,7 @@
    the network/browser instead of crashing the page.
    ========================================================================== */
 
-var CACHE_NAME = "mealmate-cache-v1";
+var CACHE_NAME = "mealmate-cache-v2";
 var ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -49,31 +49,29 @@ self.addEventListener("activate", function (event) {
 self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") return;
 
+  // Network-first: always try to get the freshest HTML/CSS/JS when online,
+  // and only fall back to the cached copy when the network fails (offline).
+  // This avoids ever getting "stuck" showing an old cached version of the
+  // app after a new deploy, which a plain cache-first strategy cannot
+  // recover from until the cache name itself changes.
   event.respondWith(
-    caches
-      .match(event.request)
-      .then(function (cached) {
-        if (cached) return cached;
-        return fetch(event.request)
-          .then(function (response) {
-            if (!response || response.status !== 200 || response.type !== "basic") {
-              return response;
-            }
-            var responseClone = response.clone();
-            caches
-              .open(CACHE_NAME)
-              .then(function (cache) {
-                cache.put(event.request, responseClone);
-              })
-              .catch(function () {});
-            return response;
-          })
-          .catch(function () {
-            return cached;
-          });
+    fetch(event.request)
+      .then(function (response) {
+        if (response && response.status === 200 && response.type === "basic") {
+          var responseClone = response.clone();
+          caches
+            .open(CACHE_NAME)
+            .then(function (cache) {
+              cache.put(event.request, responseClone);
+            })
+            .catch(function () {});
+        }
+        return response;
       })
       .catch(function () {
-        return fetch(event.request);
+        return caches.match(event.request).then(function (cached) {
+          return cached || Promise.reject("no-cache-match");
+        });
       })
   );
 });
