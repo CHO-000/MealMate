@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MealMate – มื้อดีมีเวลา</title>
 <meta name="description" content="MealMate ช่วยนักศึกษาเลือกมื้ออาหารที่เหมาะกับเวลาและงบประมาณได้เร็วขึ้น">
-<meta name="theme-color" content="#2e7d52">
+<meta name="theme-color" content="#14532d">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -38,6 +41,13 @@
   <!-- PAGE A: HOME -->
   <section class="page" id="page-home" data-page="home" aria-labelledby="home-heading">
     <h1 id="home-heading" class="sr-only">หน้าแรก</h1>
+
+    <div class="food-bubbles" aria-hidden="true">
+      <span class="food-bubble food-bubble--1">🍎</span>
+      <span class="food-bubble food-bubble--2">🍕</span>
+      <span class="food-bubble food-bubble--3">🍜</span>
+      <span class="food-bubble food-bubble--4">🥗</span>
+    </div>
 
     <section class="card card--next-meal" aria-labelledby="next-meal-heading">
       <h2 id="next-meal-heading" class="card__eyebrow">มื้อถัดไป</h2>
@@ -102,6 +112,8 @@
           <option value="breakfast">เช้า</option>
           <option value="lunch">กลางวัน</option>
           <option value="dinner">เย็น</option>
+          <option value="late_night">ดึก / ก่อนนอน</option>
+          <option value="snack">ขนม / ของว่าง</option>
         </select>
         <p class="field-error" id="error-meal" role="alert"></p>
       </div>
