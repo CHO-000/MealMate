@@ -65,6 +65,10 @@
         breakfast: DEFAULT_SETTINGS.breakfast,
         lunch: DEFAULT_SETTINGS.lunch,
         dinner: DEFAULT_SETTINGS.dinner
+      },
+      profile: {
+        displayName: "",
+        age: null
       }
     };
   }
@@ -334,6 +338,10 @@
         breakfast: (parsed.settings && parsed.settings.breakfast) || DEFAULT_SETTINGS.breakfast,
         lunch: (parsed.settings && parsed.settings.lunch) || DEFAULT_SETTINGS.lunch,
         dinner: (parsed.settings && parsed.settings.dinner) || DEFAULT_SETTINGS.dinner
+      };
+      s.profile = {
+        displayName: (parsed.profile && typeof parsed.profile.displayName === "string") ? parsed.profile.displayName : "",
+        age: (parsed.profile && typeof parsed.profile.age === "number") ? parsed.profile.age : null
       };
       // Reset group toggles on a new day
       if (s.groupsDate !== todayStr()) {
@@ -782,6 +790,52 @@
     return "🍽️";
   }
 
+  // AI auto-fills the calorie field from the menu name so the user usually
+  // doesn't have to look up or type a number themselves. Triggered when they
+  // finish typing the name (debounced) or leave the field. Always leaves the
+  // number editable afterward in case AI is unavailable or off by a lot.
+  var calorieEstimateTimer = null;
+  var lastCalorieEstimateName = "";
+
+  function scheduleCalorieEstimate() {
+    if (!aiFeaturesAvailable) return;
+    if (calorieEstimateTimer) clearTimeout(calorieEstimateTimer);
+    calorieEstimateTimer = setTimeout(estimateCaloriesForLog, 900);
+  }
+
+  function estimateCaloriesForLog() {
+    var nameInput = document.getElementById("log-name");
+    var caloriesInput = document.getElementById("log-calories");
+    var note = document.getElementById("log-calories-ai-note");
+    var name = nameInput.value.trim();
+
+    if (!aiFeaturesAvailable || !name) {
+      note.hidden = true;
+      return;
+    }
+    if (name === lastCalorieEstimateName) return;
+    lastCalorieEstimateName = name;
+
+    note.hidden = false;
+    note.classList.add("is-loading");
+    note.textContent = "🤖 AI กำลังประเมินแคลอรี่ให้...";
+
+    var meal = document.getElementById("log-meal").value;
+
+    apiPost("/api/ai/estimate-calories", { name: name, meal: meal })
+      .then(function (data) {
+        // Only auto-fill if the name hasn't changed again while we waited.
+        if (nameInput.value.trim() !== name) return;
+        caloriesInput.value = data.calories;
+        note.classList.remove("is-loading");
+        note.textContent = "🤖 AI ประเมินไว้ที่ " + data.calories + " kcal (ปรับเองได้ถ้าไม่ตรง)";
+      })
+      .catch(function (err) {
+        note.classList.remove("is-loading");
+        note.textContent = err.message || "AI ประเมินแคลไม่สำเร็จ กรอกเองได้เลย";
+      });
+  }
+
   function handleLogSubmit(e) {
     e.preventDefault();
 
@@ -820,6 +874,8 @@
         saveState();
 
         document.getElementById("log-form").reset();
+        document.getElementById("log-calories-ai-note").hidden = true;
+        lastCalorieEstimateName = "";
         showToast("บันทึกอาหารแล้ว");
 
         renderHome();
@@ -900,6 +956,7 @@
 
     renderGroupToggles();
     renderSettingsForm();
+    renderProfileForm();
   }
 
   function renderGroupToggles() {
@@ -930,6 +987,41 @@
     document.getElementById("setting-breakfast").value = state.settings.breakfast;
     document.getElementById("setting-lunch").value = state.settings.lunch;
     document.getElementById("setting-dinner").value = state.settings.dinner;
+  }
+
+  function renderProfileForm() {
+    document.getElementById("profile-name").value = state.profile.displayName || "";
+    document.getElementById("profile-age").value =
+      typeof state.profile.age === "number" ? String(state.profile.age) : "";
+  }
+
+  function handleProfileSubmit(e) {
+    e.preventDefault();
+    var nameInput = document.getElementById("profile-name");
+    var ageInput = document.getElementById("profile-age");
+    var ageErr = document.getElementById("error-profile-age");
+    ageErr.textContent = "";
+
+    var displayName = nameInput.value.trim().slice(0, 60);
+    var ageRaw = ageInput.value.trim();
+    var age = null;
+    if (ageRaw !== "") {
+      var parsedAge = parseInt(ageRaw, 10);
+      if (isNaN(parsedAge) || parsedAge <= 0 || parsedAge >= 130) {
+        ageErr.textContent = "กรุณาใส่อายุที่ถูกต้อง (1-129 ปี)";
+        return;
+      }
+      age = parsedAge;
+    }
+
+    state.profile = { displayName: displayName, age: age };
+    saveState();
+    upsertProfileRemote(state.profile);
+    updateAccountButton();
+
+    var savedMsg = document.getElementById("profile-saved");
+    savedMsg.textContent = "บันทึกโปรไฟล์แล้ว";
+    setTimeout(function () { savedMsg.textContent = ""; }, 3000);
   }
 
   function handleSettingsSubmit(e) {
@@ -1161,6 +1253,30 @@
     bubble.textContent = text;
     list.appendChild(bubble);
     list.scrollTop = list.scrollHeight;
+    return bubble;
+  }
+
+  // "กำลังพิมพ์..." indicator so the user knows AI is still working, not stuck.
+  var chatTypingBubble = null;
+
+  function showChatTyping() {
+    if (chatTypingBubble) return;
+    var list = document.getElementById("chat-messages");
+    var bubble = document.createElement("p");
+    bubble.className = "chat-msg chat-msg--assistant chat-msg--typing";
+    bubble.setAttribute("aria-label", "AI กำลังพิมพ์คำตอบ");
+    bubble.innerHTML =
+      '<span class="chat-typing-dots"><span></span><span></span><span></span></span>';
+    list.appendChild(bubble);
+    list.scrollTop = list.scrollHeight;
+    chatTypingBubble = bubble;
+  }
+
+  function hideChatTyping() {
+    if (chatTypingBubble && chatTypingBubble.parentNode) {
+      chatTypingBubble.parentNode.removeChild(chatTypingBubble);
+    }
+    chatTypingBubble = null;
   }
 
   function openChat() {
@@ -1185,21 +1301,26 @@
     appendChatMessage("user", text);
     input.value = "";
     input.disabled = true;
+    document.getElementById("chat-send").disabled = true;
+    showChatTyping();
 
     var historyForRequest = chatHistory.slice();
 
     apiPost("/api/ai/chat", { message: text, history: historyForRequest })
       .then(function (data) {
         var reply = (data && data.message) || "ขออภัย AI ไม่ได้ตอบข้อความมา";
+        hideChatTyping();
         appendChatMessage("assistant", reply);
         chatHistory.push({ role: "user", content: text });
         chatHistory.push({ role: "assistant", content: reply });
       })
       .catch(function (err) {
+        hideChatTyping();
         appendChatMessage("error", err.message || "เชื่อมต่อ AI ไม่สำเร็จ ลองใหม่อีกครั้งนะ");
       })
       .finally(function () {
         input.disabled = false;
+        document.getElementById("chat-send").disabled = false;
         input.focus();
       });
   }
@@ -1209,6 +1330,20 @@
 
     document.getElementById("ai-suggest-btn").addEventListener("click", handleAiSuggestClick);
     document.getElementById("ai-encourage-btn").addEventListener("click", handleAiEncourageClick);
+
+    // Auto-estimate calories: fire while the user pauses typing the name,
+    // and immediately when they leave the field or pick a meal.
+    var logNameInput = document.getElementById("log-name");
+    logNameInput.addEventListener("input", scheduleCalorieEstimate);
+    logNameInput.addEventListener("blur", function () {
+      if (calorieEstimateTimer) clearTimeout(calorieEstimateTimer);
+      estimateCaloriesForLog();
+    });
+    document.getElementById("log-meal").addEventListener("change", function () {
+      // Meal changed — re-estimate even if the name itself didn't change.
+      lastCalorieEstimateName = "";
+      estimateCaloriesForLog();
+    });
 
     document.getElementById("chat-fab").addEventListener("click", function () {
       if (chatOpen) closeChat(); else openChat();
@@ -1265,6 +1400,7 @@
       loadRemoteDataForToday()
         .then(function () {
           renderAll();
+          updateAccountButton();
           if (event === "SIGNED_IN") {
             closeAuthDialog();
             showToast("เข้าสู่ระบบสำเร็จ");
@@ -1286,12 +1422,16 @@
 
   function updateAccountButton() {
     var btn = document.getElementById("account-btn");
+    var profileCard = document.getElementById("profile-card");
     if (currentUser) {
-      btn.textContent = currentUser.email || "บัญชีของฉัน";
+      var displayName = state.profile && state.profile.displayName;
+      btn.textContent = displayName || currentUser.email || "บัญชีของฉัน";
       btn.classList.add("is-signed-in");
+      if (profileCard) profileCard.hidden = false;
     } else {
       btn.textContent = "เข้าสู่ระบบ";
       btn.classList.remove("is-signed-in");
+      if (profileCard) profileCard.hidden = true;
     }
   }
 
@@ -1445,9 +1585,16 @@
           lunch: settingsRes.data.lunch_time,
           dinner: settingsRes.data.dinner_time
         };
+        state.profile = {
+          displayName: settingsRes.data.display_name || "",
+          age: typeof settingsRes.data.age === "number" ? settingsRes.data.age : null
+        };
       } else {
         // First time this account logs in — seed the row from current defaults.
         upsertSettingsRemote(state.settings);
+        if (state.profile && (state.profile.displayName || state.profile.age)) {
+          upsertProfileRemote(state.profile);
+        }
       }
 
       if (!groupsRes.error && groupsRes.data) {
@@ -1513,6 +1660,24 @@
       });
   }
 
+  function upsertProfileRemote(profile) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("user_settings")
+      .upsert(
+        {
+          user_id: currentUser.id,
+          display_name: profile.displayName || null,
+          age: typeof profile.age === "number" ? profile.age : null,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id" }
+      )
+      .then(function (res) {
+        if (res.error) console.error("[supabase] profile upsert failed", res.error);
+      });
+  }
+
   function upsertGroupsRemote(groups) {
     if (!currentUser || !supabaseClient) return;
     supabaseClient
@@ -1564,6 +1729,7 @@
     document.getElementById("planner-form").addEventListener("submit", handlePlannerSubmit);
     document.getElementById("log-form").addEventListener("submit", handleLogSubmit);
     document.getElementById("settings-form").addEventListener("submit", handleSettingsSubmit);
+    document.getElementById("profile-form").addEventListener("submit", handleProfileSubmit);
     document.getElementById("clear-data-btn").addEventListener("click", handleClearData);
 
     // Group toggles

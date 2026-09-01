@@ -186,8 +186,9 @@
 
       <div class="field">
         <label for="log-calories">พลังงานโดยประมาณ (kcal)</label>
-        <input type="number" id="log-calories" name="calories" inputmode="numeric" min="0" step="1" placeholder="เช่น 450">
+        <input type="number" id="log-calories" name="calories" inputmode="numeric" min="0" step="1" placeholder="พิมพ์ชื่ออาหารด้านบน แล้วรอ AI คำนวณให้">
         <p class="field-error" id="error-log-calories" role="alert"></p>
+        <p class="field-hint ai-note" id="log-calories-ai-note" aria-live="polite" hidden></p>
       </div>
 
       <div class="field field--checkbox">
@@ -237,6 +238,24 @@
         <button type="button" class="group-toggle" data-group="fruit">🍎 ผลไม้</button>
         <button type="button" class="group-toggle" data-group="fat">🥑 ไขมัน</button>
       </div>
+    </section>
+
+    <section class="card" id="profile-card" aria-labelledby="profile-heading" hidden>
+      <h2 id="profile-heading" class="card__eyebrow">โปรไฟล์ของฉัน</h2>
+      <p class="field-hint">ข้อมูลนี้ใช้เพื่อปรับแอปให้เหมาะกับคุณเท่านั้น ไม่มีการวินิจฉัยหรือคำแนะนำทางการแพทย์ใด ๆ</p>
+      <form id="profile-form" class="form">
+        <div class="field">
+          <label for="profile-name">ชื่อที่แสดง</label>
+          <input type="text" id="profile-name" name="displayName" maxlength="60" placeholder="เช่น ชิน">
+        </div>
+        <div class="field">
+          <label for="profile-age">อายุ (ปี)</label>
+          <input type="number" id="profile-age" name="age" inputmode="numeric" min="1" max="129" step="1" placeholder="เช่น 20">
+          <p class="field-error" id="error-profile-age" role="alert"></p>
+        </div>
+        <button type="submit" class="btn btn--primary btn--full">บันทึกโปรไฟล์</button>
+        <p class="field-hint" id="profile-saved" role="status" aria-live="polite"></p>
+      </form>
     </section>
 
     <section class="card" aria-labelledby="settings-heading">

@@ -41,8 +41,16 @@ create table if not exists public.user_settings (
   breakfast_time text not null default '07:30',
   lunch_time text not null default '12:00',
   dinner_time text not null default '18:00',
+  display_name text,
+  age integer check (age is null or (age > 0 and age < 130)),
   updated_at timestamptz not null default now()
 );
+
+-- Existing projects: run this once to add the new profile columns to a
+-- table that was already created before this change (safe to re-run).
+alter table public.user_settings add column if not exists display_name text;
+alter table public.user_settings add column if not exists age integer
+  check (age is null or (age > 0 and age < 130));
 
 alter table public.user_settings enable row level security;
 

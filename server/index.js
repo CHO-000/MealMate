@@ -56,6 +56,12 @@ app.get("/api/health", function (req, res) {
   });
 });
 
+const MEAL_LABEL_TH = {
+  breakfast: "เช้า",
+  lunch: "กลางวัน",
+  dinner: "เย็น"
+};
+
 const SYSTEM_PROMPT =
   "คุณคือผู้ช่วยของแอป MealMate ซึ่งช่วยนักศึกษาไทยเลือกมื้ออาหารให้เหมาะกับเวลาและงบประมาณ " +
   "ตอบเป็นภาษาไทย น้ำเสียงเป็นมิตร ให้กำลังใจ ไม่กล่าวโทษผู้ใช้ ไม่ตัดสิน " +
@@ -185,6 +191,62 @@ app.post("/api/ai/encourage", async function (req, res) {
     );
 
     res.json({ message: text });
+  } catch (err) {
+    friendlyAiError(res, err);
+  }
+});
+
+// 4) Estimate calories for a menu name the user typed, so they don't have
+//    to look it up or guess themselves. Returns a single integer estimate;
+//    the frontend still lets them overwrite it, since this is only an
+//    educational approximation, never a precise or medical figure.
+app.post("/api/ai/estimate-calories", async function (req, res) {
+  try {
+    var name = (req.body && req.body.name ? String(req.body.name) : "").trim();
+    var meal = (req.body && req.body.meal ? String(req.body.meal) : "").trim();
+
+    if (!name) {
+      return res.status(400).json({ error: "กรุณาระบุชื่ออาหารก่อน" });
+    }
+    if (name.length > 120) {
+      return res.status(400).json({ error: "ชื่ออาหารยาวเกินไป" });
+    }
+
+    var mealLabel = MEAL_LABEL_TH[meal] || "";
+    var userPrompt =
+      "ประมาณพลังงาน (แคลอรี่) ของอาหารจานนี้สำหรับ 1 ที่ / 1 คนทาน: \"" +
+      name +
+      "\"" +
+      (mealLabel ? " (เป็นมื้อ" + mealLabel + ")" : "") +
+      "\n\nตอบกลับเป็นตัวเลขจำนวนเต็มตัวเดียวเท่านั้น หน่วยเป็น kcal ห้ามมีข้อความอื่นใด ห้ามมีหน่วย ห้ามมีคำอธิบาย " +
+      "เช่นถ้าคำตอบคือ 450 กิโลแคลอรี่ ให้ตอบว่า 450 เท่านั้น ถ้าไม่แน่ใจให้ประมาณค่าที่สมเหตุสมผลที่สุด";
+
+    var text = await ai.chatCompletion(
+      [
+        {
+          role: "system",
+          content:
+            "คุณช่วยประมาณพลังงานอาหารเป็นตัวเลข kcal คร่าว ๆ เพื่อการศึกษาเท่านั้น ไม่ใช่ค่าที่แม่นยำทางโภชนาการ " +
+            "ตอบกลับด้วยตัวเลขจำนวนเต็มล้วน ๆ เสมอ ไม่มีข้อความอื่นใดประกอบ"
+        },
+        { role: "user", content: userPrompt }
+      ],
+      { temperature: 0.3, timeoutMs: 12000 }
+    );
+
+    var match = String(text || "").match(/\d+/);
+    if (!match) {
+      return res.status(502).json({ error: "AI ประเมินแคลไม่สำเร็จ กรุณากรอกเองแทน" });
+    }
+    var calories = parseInt(match[0], 10);
+    if (isNaN(calories) || calories < 0) {
+      return res.status(502).json({ error: "AI ประเมินแคลไม่สำเร็จ กรุณากรอกเองแทน" });
+    }
+    // Clamp to a sane range — this is an estimate for a single serving, not
+    // a full day's worth of food.
+    calories = Math.max(0, Math.min(calories, 3000));
+
+    res.json({ calories: calories });
   } catch (err) {
     friendlyAiError(res, err);
   }
