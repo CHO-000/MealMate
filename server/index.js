@@ -59,8 +59,13 @@ app.get("/api/health", function (req, res) {
 const MEAL_LABEL_TH = {
   breakfast: "เช้า",
   lunch: "กลางวัน",
-  dinner: "เย็น"
+  dinner: "เย็น",
+  late_night: "ดึก/ก่อนนอน",
+  snack: "ขนม/ของว่าง",
+  other: "อื่นๆ"
 };
+
+const VALID_GROUPS = ["carb", "protein", "veggie", "fruit", "fat"];
 
 const SYSTEM_PROMPT =
   "คุณคือผู้ช่วยของแอป MealMate ซึ่งช่วยนักศึกษาไทยเลือกมื้ออาหารให้เหมาะกับเวลาและงบประมาณ " +
@@ -214,31 +219,40 @@ app.post("/api/ai/estimate-calories", async function (req, res) {
 
     var mealLabel = MEAL_LABEL_TH[meal] || "";
     var userPrompt =
-      "ประมาณพลังงาน (แคลอรี่) ของอาหารจานนี้สำหรับ 1 ที่ / 1 คนทาน: \"" +
+      "อาหารจานนี้ (สำหรับ 1 ที่ / 1 คนทาน): \"" +
       name +
       "\"" +
       (mealLabel ? " (เป็นมื้อ" + mealLabel + ")" : "") +
-      "\n\nตอบกลับเป็นตัวเลขจำนวนเต็มตัวเดียวเท่านั้น หน่วยเป็น kcal ห้ามมีข้อความอื่นใด ห้ามมีหน่วย ห้ามมีคำอธิบาย " +
-      "เช่นถ้าคำตอบคือ 450 กิโลแคลอรี่ ให้ตอบว่า 450 เท่านั้น ถ้าไม่แน่ใจให้ประมาณค่าที่สมเหตุสมผลที่สุด";
+      "\n\n1) ประมาณพลังงานเป็น kcal (จำนวนเต็ม)\n" +
+      "2) บอกว่าอาหารนี้จัดอยู่ในหมู่อาหารหลักไหนบ้าง (เลือกได้มากกว่า 1 หมู่) จากตัวเลือกนี้เท่านั้น: " +
+      "carb (คาร์โบไฮเดรต/แป้ง), protein (โปรตีน/เนื้อสัตว์/ไข่/ถั่ว), veggie (ผัก), fruit (ผลไม้), fat (ไขมัน/ของทอด/กะทิ) " +
+      "— ถ้าเป็นขนม/ของหวานที่ไม่เข้าหมู่ไหนชัดเจน ให้ตอบว่า none\n\n" +
+      "ตอบกลับในบรรทัดเดียว รูปแบบนี้เป๊ะ ๆ ห้ามมีข้อความอื่นเพิ่ม: kcal=<ตัวเลข>;groups=<รายการคั่นด้วยจุลภาค หรือ none>\n" +
+      "ตัวอย่าง: kcal=450;groups=carb,protein";
 
     var text = await ai.chatCompletion(
       [
         {
           role: "system",
           content:
-            "คุณช่วยประมาณพลังงานอาหารเป็นตัวเลข kcal คร่าว ๆ เพื่อการศึกษาเท่านั้น ไม่ใช่ค่าที่แม่นยำทางโภชนาการ " +
-            "ตอบกลับด้วยตัวเลขจำนวนเต็มล้วน ๆ เสมอ ไม่มีข้อความอื่นใดประกอบ"
+            "คุณช่วยประมาณพลังงานอาหารและจัดหมู่อาหารคร่าว ๆ เพื่อการศึกษาเท่านั้น ไม่ใช่ค่าที่แม่นยำทางโภชนาการ " +
+            "ตอบกลับตามรูปแบบที่กำหนดเป๊ะ ๆ เท่านั้น ไม่มีข้อความอื่นใดประกอบ ไม่มีคำอธิบาย"
         },
         { role: "user", content: userPrompt }
       ],
       { temperature: 0.3, timeoutMs: 12000 }
     );
 
-    var match = String(text || "").match(/\d+/);
-    if (!match) {
+    var raw = String(text || "");
+    var kcalMatch = raw.match(/kcal\s*=\s*(\d+)/i);
+    if (!kcalMatch) {
+      // Fall back to any bare number in case the model didn't follow the format.
+      kcalMatch = raw.match(/\d+/);
+    }
+    if (!kcalMatch) {
       return res.status(502).json({ error: "AI ประเมินแคลไม่สำเร็จ กรุณากรอกเองแทน" });
     }
-    var calories = parseInt(match[0], 10);
+    var calories = parseInt(kcalMatch[1] || kcalMatch[0], 10);
     if (isNaN(calories) || calories < 0) {
       return res.status(502).json({ error: "AI ประเมินแคลไม่สำเร็จ กรุณากรอกเองแทน" });
     }
@@ -246,7 +260,16 @@ app.post("/api/ai/estimate-calories", async function (req, res) {
     // a full day's worth of food.
     calories = Math.max(0, Math.min(calories, 3000));
 
-    res.json({ calories: calories });
+    var groups = [];
+    var groupsMatch = raw.match(/groups\s*=\s*([a-z,\s]+)/i);
+    if (groupsMatch) {
+      groups = groupsMatch[1]
+        .split(",")
+        .map(function (g) { return g.trim().toLowerCase(); })
+        .filter(function (g) { return VALID_GROUPS.indexOf(g) !== -1; });
+    }
+
+    res.json({ calories: calories, groups: groups });
   } catch (err) {
     friendlyAiError(res, err);
   }

@@ -158,19 +158,75 @@ img {
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 999px;
-  padding: 6px 14px;
+  padding: 5px 14px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   min-height: 32px;
   white-space: nowrap;
   max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .account-btn.is-signed-in {
   background: rgba(255, 255, 255, 0.28);
+}
+
+.account-btn__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.account-btn__avatar[hidden] {
+  display: none;
+}
+
+#account-btn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.profile-avatar-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.profile-avatar-preview--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: var(--color-primary-light);
+}
+
+.profile-avatar-preview[hidden],
+.profile-avatar-preview--empty[hidden] {
+  display: none;
+}
+
+.btn--small {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  min-height: 0;
+  display: inline-block;
+  cursor: pointer;
 }
 
 #main-content {
@@ -630,7 +686,14 @@ img {
   color: var(--color-accent-dark);
 }
 
-.log-item__delete {
+.log-item__actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.log-item__delete,
+.log-item__share {
   background: none;
   border: none;
   cursor: pointer;
@@ -638,6 +701,11 @@ img {
   min-width: 44px;
   min-height: 44px;
   border-radius: var(--radius-sm);
+}
+
+.log-item__share:hover,
+.log-item__share:focus-visible {
+  background: var(--color-primary-light);
 }
 
 .empty-hint {

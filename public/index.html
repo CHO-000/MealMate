@@ -25,7 +25,10 @@
     </div>
     <div class="app-header__right">
       <p class="app-header__date" id="header-date"></p>
-      <button type="button" class="account-btn" id="account-btn" hidden>เข้าสู่ระบบ</button>
+      <button type="button" class="account-btn" id="account-btn" hidden>
+        <img class="account-btn__avatar" id="account-btn-avatar" alt="" hidden>
+        <span id="account-btn-label">เข้าสู่ระบบ</span>
+      </button>
     </div>
   </div>
 </header>
@@ -180,8 +183,17 @@
           <option value="breakfast">เช้า</option>
           <option value="lunch">กลางวัน</option>
           <option value="dinner">เย็น</option>
+          <option value="late_night">ดึก / ก่อนนอน</option>
+          <option value="snack">ขนม / ของว่าง</option>
+          <option value="other">อื่นๆ (ระบุเอง)</option>
         </select>
         <p class="field-error" id="error-log-meal" role="alert"></p>
+      </div>
+
+      <div class="field" id="log-custom-meal-field" hidden>
+        <label for="log-custom-meal">ระบุชื่อมื้อ</label>
+        <input type="text" id="log-custom-meal" name="customMeal" maxlength="40" placeholder="เช่น มื้อก่อนออกกำลัง, ของว่างบ่าย">
+        <p class="field-error" id="error-log-custom-meal" role="alert"></p>
       </div>
 
       <div class="field">
@@ -195,6 +207,8 @@
         <input type="checkbox" id="log-ontime" name="onTime">
         <label for="log-ontime">มื้อนี้ตรงเวลา</label>
       </div>
+
+      <p class="field-hint ai-note" id="log-groups-ai-note" aria-live="polite" hidden></p>
 
       <button type="submit" class="btn btn--primary btn--full">บันทึกอาหาร</button>
     </form>
@@ -238,24 +252,6 @@
         <button type="button" class="group-toggle" data-group="fruit">🍎 ผลไม้</button>
         <button type="button" class="group-toggle" data-group="fat">🥑 ไขมัน</button>
       </div>
-    </section>
-
-    <section class="card" id="profile-card" aria-labelledby="profile-heading" hidden>
-      <h2 id="profile-heading" class="card__eyebrow">โปรไฟล์ของฉัน</h2>
-      <p class="field-hint">ข้อมูลนี้ใช้เพื่อปรับแอปให้เหมาะกับคุณเท่านั้น ไม่มีการวินิจฉัยหรือคำแนะนำทางการแพทย์ใด ๆ</p>
-      <form id="profile-form" class="form">
-        <div class="field">
-          <label for="profile-name">ชื่อที่แสดง</label>
-          <input type="text" id="profile-name" name="displayName" maxlength="60" placeholder="เช่น ชิน">
-        </div>
-        <div class="field">
-          <label for="profile-age">อายุ (ปี)</label>
-          <input type="number" id="profile-age" name="age" inputmode="numeric" min="1" max="129" step="1" placeholder="เช่น 20">
-          <p class="field-error" id="error-profile-age" role="alert"></p>
-        </div>
-        <button type="submit" class="btn btn--primary btn--full">บันทึกโปรไฟล์</button>
-        <p class="field-hint" id="profile-saved" role="status" aria-live="polite"></p>
-      </form>
     </section>
 
     <section class="card" aria-labelledby="settings-heading">
@@ -337,6 +333,45 @@
     <div class="auth-divider"><span>หรือ</span></div>
 
     <button type="button" class="btn btn--ghost btn--full" id="auth-google-btn">เข้าสู่ระบบด้วย Google</button>
+  </div>
+</div>
+
+<div class="dialog-overlay" id="profile-dialog" hidden>
+  <div class="dialog auth-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-dialog-title">
+    <div class="auth-dialog__header">
+      <p id="profile-dialog-title" class="dialog__message">โปรไฟล์ของฉัน</p>
+      <button type="button" class="chat-panel__close" id="profile-dialog-close" aria-label="ปิดหน้าต่างโปรไฟล์">✕</button>
+    </div>
+
+    <div class="profile-avatar-row">
+      <img class="profile-avatar-preview" id="profile-avatar-preview" alt="" hidden>
+      <div class="profile-avatar-preview profile-avatar-preview--empty" id="profile-avatar-empty" aria-hidden="true">🙂</div>
+      <div>
+        <label class="btn btn--ghost btn--small" for="profile-avatar-input">เปลี่ยนรูปโปรไฟล์</label>
+        <input type="file" id="profile-avatar-input" accept="image/png,image/jpeg,image/webp" class="sr-only">
+        <p class="field-hint" id="profile-avatar-status" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <p class="field-hint">ข้อมูลนี้ใช้เพื่อปรับแอปให้เหมาะกับคุณเท่านั้น ไม่มีการวินิจฉัยหรือคำแนะนำทางการแพทย์ใด ๆ</p>
+
+    <form id="profile-form" class="form">
+      <div class="field">
+        <label for="profile-name">ชื่อเล่น / ชื่อที่แสดง</label>
+        <input type="text" id="profile-name" name="displayName" maxlength="60" placeholder="เช่น ชิน">
+      </div>
+      <div class="field">
+        <label for="profile-age">อายุ (ปี)</label>
+        <input type="number" id="profile-age" name="age" inputmode="numeric" min="1" max="129" step="1" placeholder="เช่น 20">
+        <p class="field-error" id="error-profile-age" role="alert"></p>
+      </div>
+      <button type="submit" class="btn btn--primary btn--full">บันทึกโปรไฟล์</button>
+      <p class="field-hint" id="profile-saved" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="auth-divider"><span></span></div>
+
+    <button type="button" class="btn btn--danger btn--full" id="profile-signout-btn">ออกจากระบบ</button>
   </div>
 </div>
 

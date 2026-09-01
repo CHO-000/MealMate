@@ -27,8 +27,16 @@
   var MEAL_LABELS = {
     breakfast: "มื้อเช้า",
     lunch: "มื้อกลางวัน",
-    dinner: "มื้อเย็น"
+    dinner: "มื้อเย็น",
+    late_night: "มื้อดึก/ก่อนนอน",
+    snack: "ขนม/ของว่าง",
+    other: "มื้ออื่นๆ"
   };
+
+  function mealDisplayLabel(log) {
+    if (log.meal === "other" && log.customMealLabel) return log.customMealLabel;
+    return MEAL_LABELS[log.meal] || MEAL_LABELS.other;
+  }
 
   var GOAL_LABELS = {
     balanced: "สมดุล",
@@ -68,7 +76,8 @@
       },
       profile: {
         displayName: "",
-        age: null
+        age: null,
+        avatarUrl: null
       }
     };
   }
@@ -341,7 +350,8 @@
       };
       s.profile = {
         displayName: (parsed.profile && typeof parsed.profile.displayName === "string") ? parsed.profile.displayName : "",
-        age: (parsed.profile && typeof parsed.profile.age === "number") ? parsed.profile.age : null
+        age: (parsed.profile && typeof parsed.profile.age === "number") ? parsed.profile.age : null,
+        avatarUrl: (parsed.profile && typeof parsed.profile.avatarUrl === "string") ? parsed.profile.avatarUrl : null
       };
       // Reset group toggles on a new day
       if (s.groupsDate !== todayStr()) {
@@ -755,6 +765,9 @@
     var errors = {};
     if (!data.name || data.name.trim() === "") errors["log-name"] = "กรุณากรอกชื่ออาหาร";
     if (!data.meal) errors["log-meal"] = "กรุณาเลือกมื้อ";
+    if (data.meal === "other" && (!data.customMeal || data.customMeal.trim() === "")) {
+      errors["log-custom-meal"] = "กรุณาระบุชื่อมื้อ";
+    }
 
     if (data.caloriesRaw === "" || data.caloriesRaw === null || typeof data.caloriesRaw === "undefined") {
       errors["log-calories"] = "กรุณากรอกพลังงานโดยประมาณ";
@@ -778,15 +791,25 @@
   }
 
   function clearLogErrors() {
-    ["log-name", "log-meal", "log-calories"].forEach(function (id) {
+    ["log-name", "log-meal", "log-custom-meal", "log-calories"].forEach(function (id) {
       showLogFieldError(id, "");
     });
+  }
+
+  function updateCustomMealFieldVisibility() {
+    var meal = document.getElementById("log-meal").value;
+    var field = document.getElementById("log-custom-meal-field");
+    field.hidden = meal !== "other";
+    if (meal !== "other") document.getElementById("log-custom-meal").value = "";
   }
 
   function mealEmoji(mealKey) {
     if (mealKey === "breakfast") return "🌅";
     if (mealKey === "lunch") return "🍛";
     if (mealKey === "dinner") return "🌙";
+    if (mealKey === "late_night") return "🌃";
+    if (mealKey === "snack") return "🍪";
+    if (mealKey === "other") return "🍽️";
     return "🍽️";
   }
 
@@ -818,9 +841,10 @@
 
     note.hidden = false;
     note.classList.add("is-loading");
-    note.textContent = "🤖 AI กำลังประเมินแคลอรี่ให้...";
+    note.textContent = "🤖 AI กำลังประเมินแคลอรี่และหมู่อาหารให้...";
 
     var meal = document.getElementById("log-meal").value;
+    var groupsNote = document.getElementById("log-groups-ai-note");
 
     apiPost("/api/ai/estimate-calories", { name: name, meal: meal })
       .then(function (data) {
@@ -829,11 +853,43 @@
         caloriesInput.value = data.calories;
         note.classList.remove("is-loading");
         note.textContent = "🤖 AI ประเมินไว้ที่ " + data.calories + " kcal (ปรับเองได้ถ้าไม่ตรง)";
+
+        var groups = Array.isArray(data.groups) ? data.groups.filter(function (g) {
+          return GROUP_LABELS.hasOwnProperty(g);
+        }) : [];
+        if (groups.length > 0) {
+          applyAiDetectedGroups(groups);
+          var labels = groups.map(function (g) { return GROUP_LABELS[g]; }).join(", ");
+          groupsNote.hidden = false;
+          groupsNote.textContent = "🤖 AI คิดว่าเป็นหมู่: " + labels + " (ติ๊กในหน้าสรุปให้อัตโนมัติแล้ว)";
+        } else {
+          groupsNote.hidden = true;
+        }
       })
       .catch(function (err) {
         note.classList.remove("is-loading");
         note.textContent = err.message || "AI ประเมินแคลไม่สำเร็จ กรอกเองได้เลย";
+        groupsNote.hidden = true;
       });
+  }
+
+  // Merges AI-guessed food groups into today's group toggles (additive —
+  // never un-checks a group the user already marked), and persists them
+  // the same way a manual toggle would.
+  function applyAiDetectedGroups(groups) {
+    var changed = false;
+    groups.forEach(function (g) {
+      if (state.groupsSelected.indexOf(g) === -1) {
+        state.groupsSelected.push(g);
+        changed = true;
+      }
+    });
+    if (!changed) return;
+    state.groupsDate = todayStr();
+    saveState();
+    renderGroupToggles();
+    renderHome();
+    upsertGroupsRemote(state.groupsSelected);
   }
 
   function handleLogSubmit(e) {
@@ -842,6 +898,7 @@
     var data = {
       name: document.getElementById("log-name").value,
       meal: document.getElementById("log-meal").value,
+      customMeal: document.getElementById("log-custom-meal").value,
       caloriesRaw: document.getElementById("log-calories").value,
       onTime: document.getElementById("log-ontime").checked
     };
@@ -863,6 +920,7 @@
       date: todayStr(),
       name: data.name.trim(),
       meal: data.meal,
+      customMealLabel: data.meal === "other" ? data.customMeal.trim() : null,
       calories: Number(data.caloriesRaw),
       onTime: data.onTime,
       emoji: mealEmoji(data.meal)
@@ -875,6 +933,8 @@
 
         document.getElementById("log-form").reset();
         document.getElementById("log-calories-ai-note").hidden = true;
+        document.getElementById("log-groups-ai-note").hidden = true;
+        updateCustomMealFieldVisibility();
         lastCalorieEstimateName = "";
         showToast("บันทึกอาหารแล้ว");
 
@@ -912,18 +972,26 @@
         '<div class="log-item__info">' +
         '<p class="log-item__name">' + escapeHtml(log.name) + "</p>" +
         '<p class="log-item__meta">' +
-        "<span>" + MEAL_LABELS[log.meal] + "</span>" +
+        "<span>" + escapeHtml(mealDisplayLabel(log)) + "</span>" +
         "<span>" + log.calories + " kcal</span>" +
         '<span class="log-item__status ' + statusClass + '">' + statusText + "</span>" +
         "</p>" +
         "</div>" +
-        '<button type="button" class="log-item__delete" aria-label="ลบรายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '">🗑️</button>';
+        '<div class="log-item__actions">' +
+        '<button type="button" class="log-item__share" aria-label="แชร์รายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '">📤</button>' +
+        '<button type="button" class="log-item__delete" aria-label="ลบรายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '">🗑️</button>' +
+        "</div>";
 
       var deleteBtn = li.querySelector(".log-item__delete");
       deleteBtn.addEventListener("click", function () {
         confirmDialog("ต้องการลบรายการนี้หรือไม่?", function () {
           deleteLog(log.id);
         });
+      });
+
+      var shareBtn = li.querySelector(".log-item__share");
+      shareBtn.addEventListener("click", function () {
+        shareMealLog(log);
       });
 
       list.appendChild(li);
@@ -938,6 +1006,166 @@
     renderProgressPage();
     showToast("ลบรายการแล้ว");
     deleteLogRemote(logId);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Share a logged meal as a branded image card                        */
+  /* ------------------------------------------------------------------ */
+
+  function drawRoundedRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function generateMealShareImage(log) {
+    var W = 1080, H = 1080;
+    var canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    var ctx = canvas.getContext("2d");
+
+    // Background
+    ctx.fillStyle = "#faf8f3";
+    ctx.fillRect(0, 0, W, H);
+
+    // Decorative header band
+    var grad = ctx.createLinearGradient(0, 0, W, 320);
+    grad.addColorStop(0, "#2e7d52");
+    grad.addColorStop(1, "#1f5c3a");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 320);
+
+    // Brand mark
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 40px Tahoma, 'Segoe UI', sans-serif";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText("🍚 MealMate", 64, 110);
+    ctx.font = "400 28px Tahoma, 'Segoe UI', sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText("มื้อดีมีเวลา", 64, 155);
+
+    ctx.font = "700 30px Tahoma, 'Segoe UI', sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "right";
+    ctx.fillText("ภูมิใจกับมื้อนี้ 💚", W - 64, 130);
+    ctx.textAlign = "left";
+
+    // Main card
+    var cardX = 64, cardY = 380, cardW = W - 128, cardH = 560;
+    ctx.fillStyle = "#ffffff";
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 32);
+    ctx.fill();
+
+    // Emoji badge
+    ctx.fillStyle = "#e6f4ec";
+    ctx.beginPath();
+    ctx.arc(cardX + 140, cardY + 140, 90, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = "84px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(log.emoji || "🍽️", cardX + 140, cardY + 148);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+
+    // Meal name
+    ctx.fillStyle = "#22301f";
+    ctx.font = "700 56px Tahoma, 'Segoe UI', sans-serif";
+    wrapCanvasText(ctx, log.name, cardX + 260, cardY + 120, cardW - 320, 60);
+
+    // Meal label pill
+    ctx.font = "600 28px Tahoma, 'Segoe UI', sans-serif";
+    ctx.fillStyle = "#5b6a56";
+    ctx.fillText(mealDisplayLabel(log), cardX + 260, cardY + 200);
+
+    // Stats row
+    var statsY = cardY + 320;
+    drawStatBlock(ctx, cardX + 60, statsY, String(log.calories), "kcal โดยประมาณ");
+    drawStatBlock(ctx, cardX + 60 + cardW / 3, statsY, log.onTime ? "ตรงเวลา ✓" : "ไม่ตรงเวลา", "สถานะมื้อนี้");
+    drawStatBlock(ctx, cardX + 60 + (cardW / 3) * 2, statsY, todayStr().split("-").reverse().join("/"), "วันที่บันทึก");
+
+    // Footer
+    ctx.font = "400 26px Tahoma, 'Segoe UI', sans-serif";
+    ctx.fillStyle = "#8b9587";
+    ctx.textAlign = "center";
+    ctx.fillText("บันทึกและวางแผนมื้ออาหารได้ที่ MealMate", W / 2, H - 60);
+    ctx.textAlign = "left";
+
+    return new Promise(function (resolve) {
+      canvas.toBlob(function (blob) { resolve(blob); }, "image/png");
+    });
+  }
+
+  function drawStatBlock(ctx, x, y, value, label) {
+    ctx.textAlign = "left";
+    ctx.font = "700 40px Tahoma, 'Segoe UI', sans-serif";
+    ctx.fillStyle = "#2e7d52";
+    ctx.fillText(value, x, y);
+    ctx.font = "400 22px Tahoma, 'Segoe UI', sans-serif";
+    ctx.fillStyle = "#8b9587";
+    ctx.fillText(label, x, y + 34);
+  }
+
+  // Minimal word-wrap for canvas text (canvas has no built-in wrapping).
+  function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+    var words = String(text).split(" ");
+    var line = "";
+    var lines = [];
+    words.forEach(function (word) {
+      var test = line ? line + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) lines.push(line);
+    lines = lines.slice(0, 2);
+    lines.forEach(function (l, i) {
+      ctx.fillText(l, x, y + i * lineHeight);
+    });
+  }
+
+  function shareMealLog(log) {
+    showToast("กำลังสร้างรูปสำหรับแชร์...");
+    generateMealShareImage(log)
+      .then(function (blob) {
+        if (!blob) {
+          showToast("สร้างรูปไม่สำเร็จ ลองใหม่อีกครั้ง");
+          return;
+        }
+        var fileName = "mealmate-" + log.id + ".png";
+        var file = new File([blob], fileName, { type: "image/png" });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: "MealMate",
+            text: "ภูมิใจกับมื้อนี้: " + log.name + " 🍽️ #MealMate"
+          }).catch(function () {
+            // User cancelled the share sheet — not an error.
+          });
+        } else {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+          showToast("บันทึกรูปแล้ว พร้อมแชร์ได้เลย");
+        }
+      })
+      .catch(function () {
+        showToast("สร้างรูปไม่สำเร็จ ลองใหม่อีกครั้ง");
+      });
   }
 
   /* ------------------------------------------------------------------ */
@@ -956,7 +1184,6 @@
 
     renderGroupToggles();
     renderSettingsForm();
-    renderProfileForm();
   }
 
   function renderGroupToggles() {
@@ -989,12 +1216,6 @@
     document.getElementById("setting-dinner").value = state.settings.dinner;
   }
 
-  function renderProfileForm() {
-    document.getElementById("profile-name").value = state.profile.displayName || "";
-    document.getElementById("profile-age").value =
-      typeof state.profile.age === "number" ? String(state.profile.age) : "";
-  }
-
   function handleProfileSubmit(e) {
     e.preventDefault();
     var nameInput = document.getElementById("profile-name");
@@ -1014,7 +1235,7 @@
       age = parsedAge;
     }
 
-    state.profile = { displayName: displayName, age: age };
+    state.profile = { displayName: displayName, age: age, avatarUrl: state.profile.avatarUrl || null };
     saveState();
     upsertProfileRemote(state.profile);
     updateAccountButton();
@@ -1340,6 +1561,7 @@
       estimateCaloriesForLog();
     });
     document.getElementById("log-meal").addEventListener("change", function () {
+      updateCustomMealFieldVisibility();
       // Meal changed — re-estimate even if the name itself didn't change.
       lastCalorieEstimateName = "";
       estimateCaloriesForLog();
@@ -1422,27 +1644,99 @@
 
   function updateAccountButton() {
     var btn = document.getElementById("account-btn");
-    var profileCard = document.getElementById("profile-card");
+    var label = document.getElementById("account-btn-label");
+    var avatar = document.getElementById("account-btn-avatar");
     if (currentUser) {
       var displayName = state.profile && state.profile.displayName;
-      btn.textContent = displayName || currentUser.email || "บัญชีของฉัน";
+      label.textContent = displayName || currentUser.email || "บัญชีของฉัน";
       btn.classList.add("is-signed-in");
-      if (profileCard) profileCard.hidden = false;
+      var avatarUrl = state.profile && state.profile.avatarUrl;
+      if (avatarUrl) {
+        avatar.src = avatarUrl;
+        avatar.hidden = false;
+      } else {
+        avatar.hidden = true;
+      }
     } else {
-      btn.textContent = "เข้าสู่ระบบ";
+      label.textContent = "เข้าสู่ระบบ";
       btn.classList.remove("is-signed-in");
-      if (profileCard) profileCard.hidden = true;
+      avatar.hidden = true;
     }
   }
 
   function handleAccountBtnClick() {
     if (currentUser) {
-      confirmDialog("ต้องการออกจากระบบหรือไม่?", function () {
-        supabaseClient.auth.signOut();
-      });
+      openProfileDialog();
     } else {
       openAuthDialog();
     }
+  }
+
+  function openProfileDialog() {
+    renderProfileDialog();
+    document.getElementById("profile-dialog").hidden = false;
+  }
+
+  function closeProfileDialog() {
+    document.getElementById("profile-dialog").hidden = true;
+    document.getElementById("profile-saved").textContent = "";
+    document.getElementById("profile-avatar-status").textContent = "";
+  }
+
+  function renderProfileDialog() {
+    document.getElementById("profile-name").value = state.profile.displayName || "";
+    document.getElementById("profile-age").value =
+      typeof state.profile.age === "number" ? String(state.profile.age) : "";
+
+    var preview = document.getElementById("profile-avatar-preview");
+    var empty = document.getElementById("profile-avatar-empty");
+    if (state.profile.avatarUrl) {
+      preview.src = state.profile.avatarUrl;
+      preview.hidden = false;
+      empty.hidden = true;
+    } else {
+      preview.hidden = true;
+      empty.hidden = false;
+    }
+  }
+
+  function handleAvatarInputChange(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var status = document.getElementById("profile-avatar-status");
+
+    if (!currentUser || !supabaseClient) {
+      status.textContent = "ต้องเข้าสู่ระบบก่อนถึงจะอัปโหลดรูปได้";
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      status.textContent = "ไฟล์ใหญ่เกินไป (ไม่เกิน 3MB)";
+      return;
+    }
+
+    status.textContent = "กำลังอัปโหลดรูป...";
+
+    var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    var path = currentUser.id + "/avatar." + ext;
+
+    supabaseClient.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, cacheControl: "3600" })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        var pub = supabaseClient.storage.from("avatars").getPublicUrl(path);
+        // Bust cache so the new photo shows immediately, not a stale cached one.
+        var url = pub.data.publicUrl + "?t=" + Date.now();
+        state.profile.avatarUrl = url;
+        saveState();
+        upsertProfileRemote(state.profile);
+        updateAccountButton();
+        renderProfileDialog();
+        status.textContent = "อัปโหลดรูปโปรไฟล์แล้ว";
+      })
+      .catch(function (err) {
+        status.textContent = (err && err.message) || "อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกครั้ง";
+      });
   }
 
   function openAuthDialog() {
@@ -1539,6 +1833,7 @@
       date: row.log_date,
       name: row.name,
       meal: row.meal,
+      customMealLabel: row.custom_meal_label || null,
       calories: row.calories,
       onTime: row.on_time,
       emoji: row.emoji
@@ -1587,7 +1882,8 @@
         };
         state.profile = {
           displayName: settingsRes.data.display_name || "",
-          age: typeof settingsRes.data.age === "number" ? settingsRes.data.age : null
+          age: typeof settingsRes.data.age === "number" ? settingsRes.data.age : null,
+          avatarUrl: settingsRes.data.avatar_url || null
         };
       } else {
         // First time this account logs in — seed the row from current defaults.
@@ -1615,6 +1911,7 @@
       log_date: log.date,
       name: log.name,
       meal: log.meal,
+      custom_meal_label: log.customMealLabel || null,
       calories: log.calories,
       on_time: log.onTime,
       emoji: log.emoji || null
@@ -1669,6 +1966,7 @@
           user_id: currentUser.id,
           display_name: profile.displayName || null,
           age: typeof profile.age === "number" ? profile.age : null,
+          avatar_url: profile.avatarUrl || null,
           updated_at: new Date().toISOString()
         },
         { onConflict: "user_id" }
@@ -1707,6 +2005,23 @@
     document.getElementById("auth-google-btn").addEventListener("click", handleGoogleSignIn);
     document.getElementById("auth-dialog").addEventListener("click", function (e) {
       if (e.target === document.getElementById("auth-dialog")) closeAuthDialog();
+    });
+
+    document.getElementById("profile-dialog-close").addEventListener("click", closeProfileDialog);
+    document.getElementById("profile-dialog").addEventListener("click", function (e) {
+      if (e.target === document.getElementById("profile-dialog")) closeProfileDialog();
+    });
+    document.getElementById("profile-avatar-input").addEventListener("change", handleAvatarInputChange);
+    document.getElementById("profile-signout-btn").addEventListener("click", function () {
+      confirmDialog("ต้องการออกจากระบบหรือไม่?", function () {
+        closeProfileDialog();
+        supabaseClient.auth.signOut();
+      });
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !document.getElementById("profile-dialog").hidden) {
+        closeProfileDialog();
+      }
     });
   }
 
