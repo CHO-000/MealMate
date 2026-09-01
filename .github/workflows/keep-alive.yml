@@ -1,0 +1,17 @@
+name: Keep MealMate awake
+
+on:
+  schedule:
+    # Every 10 minutes. Render's free tier spins the service down after
+    # ~15 minutes of no traffic, so a ping this often keeps it warm.
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the live site
+        run: |
+          curl -sS -o /dev/null -w "status=%{http_code} time=%{time_total}s\n" \
+            https://mealmate-o638.onrender.com/ || true
