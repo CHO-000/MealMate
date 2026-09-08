@@ -2083,8 +2083,8 @@
         // On sign-in (or signup with an immediate session), onAuthStateChange
         // handles the rest.
       })
-      .catch(function () {
-        errorEl.textContent = "เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง";
+      .catch(function (err) {
+        errorEl.textContent = (err && err.message) ? "ข้อผิดพลาด: " + err.message : "เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง";
       })
       .finally(function () {
         submitBtn.disabled = false;
@@ -2093,9 +2093,12 @@
 
   function translateAuthError(message) {
     if (!message) return "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง";
-    if (message.indexOf("Invalid login credentials") !== -1) return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+    if (message.indexOf("Invalid login credentials") !== -1) return "อีเมลหรือรหัสผ่านไม่ถูกต้อง (หากยังไม่มีบัญชี ให้เลือกแท็บ 'สมัครสมาชิก' ก่อน)";
+    if (message.indexOf("Email not confirmed") !== -1) return "กรุณายืนยันอีเมลในกล่องข้อความ (Email Inbox) ของคุณก่อนเข้าสู่ระบบ";
+    if (message.indexOf("User not found") !== -1) return "ยังไม่มีบัญชีนี้ในระบบ กรุณาเลือกแท็บ 'สมัครสมาชิก' ก่อน";
     if (message.indexOf("already registered") !== -1) return "อีเมลนี้สมัครไว้แล้ว ลองเข้าสู่ระบบแทน";
-    if (message.indexOf("Password should be") !== -1) return "รหัสผ่านสั้นเกินไป";
+    if (message.indexOf("Password should be") !== -1) return "รหัสผ่านสั้นเกินไป (ต้องมีอย่างน้อย 6 ตัวอักษร)";
+    if (message.indexOf("ApiKey") !== -1 || message.indexOf("JWT") !== -1 || message.indexOf("API key") !== -1) return "Supabase API Key ไม่ถูกต้อง กรุณาเช็ค SUPABASE_ANON_KEY";
     return message;
   }
 
