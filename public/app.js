@@ -2184,6 +2184,127 @@
     });
   }
 
+  function persistNewLog(log) {
+    if (!currentUser || !supabaseClient) return Promise.resolve(log);
+    var row = {
+      user_id: currentUser.id,
+      log_date: log.date,
+      name: log.name,
+      meal: log.meal,
+      custom_meal_label: log.customMealLabel || null,
+      calories: log.calories,
+      on_time: log.onTime,
+      emoji: log.emoji || null
+    };
+    return supabaseClient
+      .from("meal_logs")
+      .insert(row)
+      .select()
+      .single()
+      .then(function (res) {
+        if (res.error) throw res.error;
+        return mapRemoteLog(res.data);
+      });
+  }
+
+  function deleteLogRemote(logId) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("meal_logs")
+      .delete()
+      .eq("id", logId)
+      .then(function (res) {
+        if (res.error) console.error("[supabase] delete failed", res.error);
+      });
+  }
+
+  function upsertSettingsRemote(settings) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("user_settings")
+      .upsert(
+        {
+          user_id: currentUser.id,
+          breakfast_time: settings.breakfast,
+          lunch_time: settings.lunch,
+          dinner_time: settings.dinner,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id" }
+      )
+      .then(function (res) {
+        if (res.error) console.error("[supabase] settings upsert failed", res.error);
+      });
+  }
+
+  function upsertProfileRemote(profile) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("user_settings")
+      .upsert(
+        {
+          user_id: currentUser.id,
+          display_name: profile.displayName || null,
+          age: typeof profile.age === "number" ? profile.age : null,
+          avatar_url: profile.avatarUrl || null,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id" }
+      )
+      .then(function (res) {
+        if (res.error) console.error("[supabase] profile upsert failed", res.error);
+      });
+  }
+
+  function upsertGroupsRemote(groups) {
+    if (!currentUser || !supabaseClient) return;
+    supabaseClient
+      .from("daily_groups")
+      .upsert(
+        {
+          user_id: currentUser.id,
+          log_date: todayStr(),
+          groups: groups,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id,log_date" }
+      )
+      .then(function (res) {
+        if (res.error) console.error("[supabase] groups upsert failed", res.error);
+      });
+  }
+
+  function initAccountFeatures() {
+    initSupabaseClient();
+
+    document.getElementById("account-btn").addEventListener("click", handleAccountBtnClick);
+    document.getElementById("auth-dialog-close").addEventListener("click", closeAuthDialog);
+    document.getElementById("auth-tab-signin").addEventListener("click", function () { setAuthMode("signin"); });
+    document.getElementById("auth-tab-signup").addEventListener("click", function () { setAuthMode("signup"); });
+    document.getElementById("auth-form").addEventListener("submit", handleAuthSubmit);
+    document.getElementById("auth-google-btn").addEventListener("click", handleGoogleSignIn);
+    document.getElementById("auth-dialog").addEventListener("click", function (e) {
+      if (e.target === document.getElementById("auth-dialog")) closeAuthDialog();
+    });
+
+    document.getElementById("profile-dialog-close").addEventListener("click", closeProfileDialog);
+    document.getElementById("profile-dialog").addEventListener("click", function (e) {
+      if (e.target === document.getElementById("profile-dialog")) closeProfileDialog();
+    });
+    document.getElementById("profile-avatar-input").addEventListener("change", handleAvatarInputChange);
+    document.getElementById("profile-signout-btn").addEventListener("click", function () {
+      confirmDialog("ต้องการออกจากระบบหรือไม่?", function () {
+        closeProfileDialog();
+        supabaseClient.auth.signOut();
+      });
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !document.getElementById("profile-dialog").hidden) {
+        closeProfileDialog();
+      }
+    });
+  }
+
   function initDateNavigator() {
     var picker = document.getElementById("log-date-picker");
     var prevBtn = document.getElementById("log-date-prev");
