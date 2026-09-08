@@ -214,6 +214,15 @@
     <h1 id="log-heading" class="page-title">บันทึกอาหาร</h1>
     <p class="page-subtitle">จดไว้เร็ว ๆ ไม่ต้องกรอกเยอะ</p>
 
+    <div class="date-navigator card">
+      <button type="button" class="btn btn--ghost btn--small date-nav-btn" id="log-date-prev" aria-label="วันก่อนหน้า">◀</button>
+      <div class="date-navigator__center">
+        <input type="date" id="log-date-picker" class="date-picker-input">
+        <button type="button" class="btn btn--ghost btn--small date-today-btn" id="log-date-today-btn">วันนี้</button>
+      </div>
+      <button type="button" class="btn btn--ghost btn--small date-nav-btn" id="log-date-next" aria-label="วันถัดไป">▶</button>
+    </div>
+
     <form id="log-form" class="card form" novalidate>
       <div class="field">
         <label for="log-name">ชื่ออาหาร</label>
@@ -255,11 +264,14 @@
 
       <p class="field-hint ai-note" id="log-groups-ai-note" aria-live="polite" hidden></p>
 
-      <button type="submit" class="btn btn--primary btn--full">บันทึกอาหาร</button>
+      <button type="submit" class="btn btn--primary btn--full" id="log-submit-btn">บันทึกอาหาร</button>
     </form>
 
     <section aria-labelledby="log-list-heading">
-      <h2 id="log-list-heading" class="section-title">รายการวันนี้</h2>
+      <div class="section-title-wrap">
+        <h2 id="log-list-heading" class="section-title">รายการอาหาร</h2>
+        <span class="log-list-summary-badge" id="log-list-summary-badge">0 kcal</span>
+      </div>
       <ul class="log-list" id="log-list"></ul>
       <p class="empty-hint" id="log-empty" hidden>ยังไม่มีรายการอาหารวันนี้ เริ่มบันทึกมื้อแรกได้เลย</p>
     </section>
@@ -296,6 +308,61 @@
         <button type="button" class="group-toggle" data-group="veggie">🥦 ผัก</button>
         <button type="button" class="group-toggle" data-group="fruit">🍎 ผลไม้</button>
         <button type="button" class="group-toggle" data-group="fat">🥑 ไขมัน</button>
+      </div>
+    </section>
+
+    <!-- MONTHLY HISTORY & SUMMARY SECTION -->
+    <section class="card history-section" aria-labelledby="monthly-history-heading">
+      <div class="history-header">
+        <div>
+          <h2 id="monthly-history-heading" class="card__eyebrow">📊 สรุปประวัติรายเดือน</h2>
+          <p class="history-subtitle">สถิติและประวัติการกินย้อนหลัง</p>
+        </div>
+        <select id="history-month-select" class="history-month-select" aria-label="เลือกเดือนที่ต้องการดูสรุป"></select>
+      </div>
+
+      <div class="monthly-stats-grid">
+        <div class="monthly-stat-card">
+          <span class="monthly-stat-card__icon" aria-hidden="true">📅</span>
+          <div>
+            <p class="monthly-stat-card__value" id="monthly-stat-days">0 วัน</p>
+            <p class="monthly-stat-card__label">วันที่ลงบันทึก</p>
+          </div>
+        </div>
+        <div class="monthly-stat-card">
+          <span class="monthly-stat-card__icon" aria-hidden="true">🔥</span>
+          <div>
+            <p class="monthly-stat-card__value" id="monthly-stat-kcal">0 kcal</p>
+            <p class="monthly-stat-card__label">พลังงานรวมเดือนนี้</p>
+          </div>
+        </div>
+        <div class="monthly-stat-card">
+          <span class="monthly-stat-card__icon" aria-hidden="true">⚡</span>
+          <div>
+            <p class="monthly-stat-card__value" id="monthly-stat-avg">0 kcal</p>
+            <p class="monthly-stat-card__label">เฉลี่ยต่อวัน (วันที่บันทึก)</p>
+          </div>
+        </div>
+        <div class="monthly-stat-card">
+          <span class="monthly-stat-card__icon" aria-hidden="true">⏰</span>
+          <div>
+            <p class="monthly-stat-card__value" id="monthly-stat-ontime">0%</p>
+            <p class="monthly-stat-card__label">มื้อตรงเวลา</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="monthly-chart-wrap">
+        <div class="monthly-chart-header">
+          <span class="monthly-chart-title">📈 พลังงานรายวัน (kcal)</span>
+          <span class="monthly-chart-sub" id="monthly-chart-sub">แตะแท่งกราฟเพื่อดูรายละเอียดวันนั้น</span>
+        </div>
+        <div class="monthly-chart-container" id="monthly-chart-container"></div>
+      </div>
+
+      <div class="monthly-days-wrap">
+        <h3 class="monthly-days-title">ประวัติย้อนหลังในเดือนนี้</h3>
+        <div class="monthly-days-list" id="monthly-days-list"></div>
       </div>
     </section>
 

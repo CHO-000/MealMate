@@ -376,6 +376,21 @@
   /* Date / time helpers                                                */
   /* ------------------------------------------------------------------ */
 
+  var selectedLogDate = todayStr();
+  var selectedHistoryMonth = monthKeyOf(todayStr());
+
+  function monthKeyOf(dateStr) {
+    if (!dateStr || dateStr.length < 7) return "";
+    return dateStr.slice(0, 7);
+  }
+
+  function parseYmd(dateStr) {
+    if (!dateStr) return new Date();
+    var parts = dateStr.split("-");
+    if (parts.length < 3) return new Date();
+    return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  }
+
   function todayStr() {
     var d = new Date();
     return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
@@ -395,6 +410,24 @@
     return days[date.getDay()] + " " + date.getDate() + " " + months[date.getMonth()] + " " + buddhistYear;
   }
 
+  function formatThaiMonthLabel(monthKey) {
+    if (!monthKey || monthKey.length < 7) return "";
+    var parts = monthKey.split("-");
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var months = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    return months[m - 1] + " " + (y + 543);
+  }
+
+  function formatShortThaiDate(dateStr) {
+    var d = parseYmd(dateStr);
+    var monthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    return d.getDate() + " " + monthsShort[d.getMonth()] + " " + (d.getFullYear() + 543);
+  }
+
   function parseTimeToday(hhmm) {
     var parts = (hhmm || "00:00").split(":");
     var h = parseInt(parts[0], 10) || 0;
@@ -404,14 +437,10 @@
     return d;
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Next meal computation                                              */
-  /* ------------------------------------------------------------------ */
-
-  function getTodayLogs() {
-    var today = todayStr();
+  function getLogsForDate(dateStr) {
+    var targetDate = dateStr || selectedLogDate || todayStr();
     return state.logs.filter(function (l) {
-      return l.date === today;
+      return l.date === targetDate;
     });
   }
 
@@ -697,7 +726,7 @@
 
     var log = {
       id: "log-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
-      date: todayStr(),
+      date: selectedLogDate || todayStr(),
       name: item.name,
       meal: mealKey,
       calories: item.calories,
@@ -917,7 +946,7 @@
 
     var log = {
       id: "log-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
-      date: todayStr(),
+      date: selectedLogDate || todayStr(),
       name: data.name.trim(),
       meal: data.meal,
       customMealLabel: data.meal === "other" ? data.customMeal.trim() : null,
@@ -948,14 +977,39 @@
   }
 
   function renderLogPage() {
+    var datePicker = document.getElementById("log-date-picker");
+    if (datePicker && datePicker.value !== selectedLogDate) {
+      datePicker.value = selectedLogDate;
+    }
+
+    var isToday = (selectedLogDate === todayStr());
+    var headingEl = document.getElementById("log-list-heading");
+    var submitBtn = document.getElementById("log-submit-btn");
+
+    if (headingEl) {
+      headingEl.textContent = isToday ? "รายการอาหารวันนี้" : "รายการประจำวันที่ " + formatShortThaiDate(selectedLogDate);
+    }
+    if (submitBtn) {
+      submitBtn.textContent = isToday ? "บันทึกอาหาร" : "บันทึกอาหารย้อนหลัง (วันที่ " + formatShortThaiDate(selectedLogDate) + ")";
+    }
+
     var list = document.getElementById("log-list");
     var emptyHint = document.getElementById("log-empty");
-    var logs = getTodayLogs().slice().reverse();
+    var logs = getLogsForDate(selectedLogDate).slice().reverse();
+
+    var totalKcal = logs.reduce(function (sum, l) { return sum + (Number(l.calories) || 0); }, 0);
+    var summaryBadge = document.getElementById("log-list-summary-badge");
+    if (summaryBadge) {
+      summaryBadge.textContent = totalKcal.toLocaleString() + " kcal (" + logs.length + " มื้อ)";
+    }
 
     list.innerHTML = "";
 
     if (logs.length === 0) {
       emptyHint.hidden = false;
+      emptyHint.textContent = isToday
+        ? "ยังไม่มีรายการอาหารวันนี้ เริ่มบันทึกมื้อแรกได้เลย"
+        : "ไม่มีรายการอาหารบันทึกไว้ในวันที่ " + formatShortThaiDate(selectedLogDate);
       return;
     }
     emptyHint.hidden = true;
@@ -1184,6 +1238,232 @@
 
     renderGroupToggles();
     renderSettingsForm();
+    renderMonthlySummary();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Monthly History & Summary Dashboard                                */
+  /* ------------------------------------------------------------------ */
+
+  function getAvailableMonths() {
+    var monthsSet = {};
+    monthsSet[monthKeyOf(todayStr())] = true;
+    state.logs.forEach(function (l) {
+      if (l.date) {
+        monthsSet[monthKeyOf(l.date)] = true;
+      }
+    });
+    var months = Object.keys(monthsSet);
+    months.sort(function (a, b) { return b.localeCompare(a); });
+    return months;
+  }
+
+  function renderMonthlySummary() {
+    var monthSelect = document.getElementById("history-month-select");
+    if (!monthSelect) return;
+
+    var availableMonths = getAvailableMonths();
+    if (availableMonths.indexOf(selectedHistoryMonth) === -1) {
+      selectedHistoryMonth = availableMonths[0] || monthKeyOf(todayStr());
+    }
+
+    monthSelect.innerHTML = "";
+    availableMonths.forEach(function (mKey) {
+      var opt = document.createElement("option");
+      opt.value = mKey;
+      opt.textContent = formatThaiMonthLabel(mKey);
+      if (mKey === selectedHistoryMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
+    });
+
+    var monthLogs = state.logs.filter(function (l) {
+      return l.date && l.date.indexOf(selectedHistoryMonth) === 0;
+    });
+
+    var activeDaysSet = {};
+    monthLogs.forEach(function (l) { activeDaysSet[l.date] = true; });
+    var activeDaysCount = Object.keys(activeDaysSet).length;
+
+    var totalKcal = monthLogs.reduce(function (sum, l) { return sum + (Number(l.calories) || 0); }, 0);
+    var avgKcal = activeDaysCount > 0 ? Math.round(totalKcal / activeDaysCount) : 0;
+    var totalMeals = monthLogs.length;
+    var onTimeCount = monthLogs.filter(function (l) { return l.onTime; }).length;
+    var onTimePercent = totalMeals > 0 ? Math.round((onTimeCount / totalMeals) * 100) : 0;
+
+    var daysEl = document.getElementById("monthly-stat-days");
+    var kcalEl = document.getElementById("monthly-stat-kcal");
+    var avgEl = document.getElementById("monthly-stat-avg");
+    var onTimeEl = document.getElementById("monthly-stat-ontime");
+
+    if (daysEl) daysEl.textContent = activeDaysCount + " วัน";
+    if (kcalEl) kcalEl.textContent = totalKcal.toLocaleString() + " kcal";
+    if (avgEl) avgEl.textContent = avgKcal.toLocaleString() + " kcal";
+    if (onTimeEl) onTimeEl.textContent = onTimePercent + "% (" + onTimeCount + "/" + totalMeals + " มื้อ)";
+
+    renderMonthlyChart(selectedHistoryMonth, monthLogs);
+    renderMonthlyDaysList(selectedHistoryMonth, monthLogs);
+  }
+
+  function renderMonthlyChart(monthKey, monthLogs) {
+    var container = document.getElementById("monthly-chart-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var parts = monthKey.split("-");
+    var year = parseInt(parts[0], 10);
+    var month = parseInt(parts[1], 10);
+    var daysInMonth = new Date(year, month, 0).getDate();
+
+    var dailyKcal = {};
+    monthLogs.forEach(function (l) {
+      var d = parseInt(l.date.split("-")[2], 10);
+      dailyKcal[d] = (dailyKcal[d] || 0) + (Number(l.calories) || 0);
+    });
+
+    var maxDailyKcal = 0;
+    for (var d = 1; d <= daysInMonth; d++) {
+      if ((dailyKcal[d] || 0) > maxDailyKcal) maxDailyKcal = dailyKcal[d];
+    }
+
+    if (maxDailyKcal === 0) {
+      container.innerHTML = '<p class="monthly-chart-empty">ยังไม่มีข้อมูลบันทึกในเดือนนี้</p>';
+      return;
+    }
+
+    for (var dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+      var dayStr = monthKey + "-" + pad2(dayNum);
+      var kcal = dailyKcal[dayNum] || 0;
+      var heightPct = maxDailyKcal > 0 ? Math.max(8, Math.round((kcal / maxDailyKcal) * 100)) : 0;
+
+      var barItem = document.createElement("div");
+      barItem.className = "chart-bar-item";
+      if (dayStr === selectedLogDate) barItem.classList.add("is-selected");
+      barItem.setAttribute("title", "วันที่ " + dayNum + ": " + (kcal > 0 ? kcal + " kcal" : "ไม่ได้บันทึก"));
+
+      var valSpan = document.createElement("span");
+      valSpan.className = "chart-bar-val";
+      valSpan.textContent = kcal > 0 ? kcal : "";
+
+      var track = document.createElement("div");
+      track.className = "chart-bar-track";
+
+      var fill = document.createElement("div");
+      fill.className = "chart-bar-fill";
+      fill.style.height = (kcal > 0 ? heightPct : 0) + "%";
+      track.appendChild(fill);
+
+      var dateSpan = document.createElement("span");
+      dateSpan.className = "chart-bar-date";
+      dateSpan.textContent = String(dayNum);
+
+      barItem.appendChild(valSpan);
+      barItem.appendChild(track);
+      barItem.appendChild(dateSpan);
+
+      (function (targetDate) {
+        barItem.addEventListener("click", function () {
+          selectedLogDate = targetDate;
+          navigateTo("log");
+        });
+      })(dayStr);
+
+      container.appendChild(barItem);
+    }
+  }
+
+  function renderMonthlyDaysList(monthKey, monthLogs) {
+    var container = document.getElementById("monthly-days-list");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var daysGrouped = {};
+    monthLogs.forEach(function (l) {
+      if (!daysGrouped[l.date]) daysGrouped[l.date] = [];
+      daysGrouped[l.date].push(l);
+    });
+
+    var sortedDates = Object.keys(daysGrouped).sort(function (a, b) { return b.localeCompare(a); });
+
+    if (sortedDates.length === 0) {
+      container.innerHTML = '<p class="empty-hint">ยังไม่มีประวัติการบันทึกอาหารในเดือนนี้</p>';
+      return;
+    }
+
+    sortedDates.forEach(function (dateStr) {
+      var dayLogs = daysGrouped[dateStr];
+      var totalKcal = dayLogs.reduce(function (sum, l) { return sum + (Number(l.calories) || 0); }, 0);
+      var thaiDate = formatThaiDate(parseYmd(dateStr));
+
+      var card = document.createElement("div");
+      card.className = "day-history-card";
+
+      var header = document.createElement("div");
+      header.className = "day-history-header";
+      header.setAttribute("tabindex", "0");
+      header.setAttribute("role", "button");
+      header.setAttribute("aria-expanded", "false");
+
+      header.innerHTML =
+        '<div class="day-history-date">' +
+        '<span>' + thaiDate + '</span>' +
+        '<span class="day-history-date-badge">' + dayLogs.length + ' มื้อ</span>' +
+        '</div>' +
+        '<div class="day-history-summary">' +
+        '<span class="day-history-kcal">' + totalKcal.toLocaleString() + ' kcal</span>' +
+        '<span class="day-history-toggle-icon">▼</span>' +
+        '</div>';
+
+      var body = document.createElement("div");
+      body.className = "day-history-body";
+      body.hidden = true;
+
+      var ul = document.createElement("ul");
+      ul.className = "day-history-meal-list";
+
+      dayLogs.forEach(function (log) {
+        var li = document.createElement("li");
+        li.className = "day-history-meal-item";
+        var onTimeSymbol = log.onTime ? '<span style="color:#16a34a; font-weight:bold;">✓ ตรงเวลา</span>' : '<span style="color:#c0392b; font-weight:bold;">✕ ไม่ตรงเวลา</span>';
+        li.innerHTML =
+          '<div class="day-history-meal-info">' +
+          '<span>' + (log.emoji || '🍽️') + '</span>' +
+          '<span class="day-history-meal-name">' + escapeHtml(log.name) + '</span>' +
+          '<span class="day-history-meal-tag">' + escapeHtml(mealDisplayLabel(log)) + '</span>' +
+          '</div>' +
+          '<div style="display:flex; align-items:center; gap:8px;">' +
+          '<span class="day-history-meal-kcal">' + log.calories + ' kcal</span>' +
+          '<span style="font-size:0.8rem;">' + onTimeSymbol + '</span>' +
+          '</div>';
+        ul.appendChild(li);
+      });
+
+      var actions = document.createElement("div");
+      actions.className = "day-history-actions";
+      var viewBtn = document.createElement("button");
+      viewBtn.type = "button";
+      viewBtn.className = "btn btn--ghost btn--small";
+      viewBtn.textContent = "ดู / แก้ไขในหน้าบันทึก ➔";
+      viewBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        selectedLogDate = dateStr;
+        navigateTo("log");
+      });
+      actions.appendChild(viewBtn);
+
+      body.appendChild(ul);
+      body.appendChild(actions);
+
+      header.addEventListener("click", function () {
+        var isOpen = !body.hidden;
+        body.hidden = isOpen;
+        card.classList.toggle("is-open", !isOpen);
+        header.setAttribute("aria-expanded", !isOpen ? "true" : "false");
+      });
+
+      card.appendChild(header);
+      card.appendChild(body);
+      container.appendChild(card);
+    });
   }
 
   function renderGroupToggles() {
@@ -1847,8 +2127,7 @@
     var logsQuery = supabaseClient
       .from("meal_logs")
       .select("*")
-      .eq("log_date", today)
-      .order("created_at", { ascending: true });
+      .order("log_date", { ascending: true });
 
     var settingsQuery = supabaseClient
       .from("user_settings")
@@ -1870,9 +2149,7 @@
 
       if (logsRes.error) throw logsRes.error;
 
-      state.logs = state.logs
-        .filter(function (l) { return l.date !== today; })
-        .concat((logsRes.data || []).map(mapRemoteLog));
+      state.logs = (logsRes.data || []).map(mapRemoteLog);
 
       if (!settingsRes.error && settingsRes.data) {
         state.settings = {
@@ -1904,125 +2181,54 @@
     });
   }
 
-  function persistNewLog(log) {
-    if (!currentUser || !supabaseClient) return Promise.resolve(log);
-    var row = {
-      user_id: currentUser.id,
-      log_date: log.date,
-      name: log.name,
-      meal: log.meal,
-      custom_meal_label: log.customMealLabel || null,
-      calories: log.calories,
-      on_time: log.onTime,
-      emoji: log.emoji || null
-    };
-    return supabaseClient
-      .from("meal_logs")
-      .insert(row)
-      .select()
-      .single()
-      .then(function (res) {
-        if (res.error) throw res.error;
-        return mapRemoteLog(res.data);
+  function initDateNavigator() {
+    var picker = document.getElementById("log-date-picker");
+    var prevBtn = document.getElementById("log-date-prev");
+    var nextBtn = document.getElementById("log-date-next");
+    var todayBtn = document.getElementById("log-date-today-btn");
+
+    if (picker) {
+      picker.value = selectedLogDate;
+      picker.addEventListener("change", function (e) {
+        if (e.target.value) {
+          selectedLogDate = e.target.value;
+          renderLogPage();
+        }
       });
-  }
+    }
 
-  function deleteLogRemote(logId) {
-    if (!currentUser || !supabaseClient) return;
-    supabaseClient
-      .from("meal_logs")
-      .delete()
-      .eq("id", logId)
-      .then(function (res) {
-        if (res.error) console.error("[supabase] delete failed", res.error);
+    if (prevBtn) {
+      prevBtn.addEventListener("click", function () {
+        var d = parseYmd(selectedLogDate);
+        d.setDate(d.getDate() - 1);
+        selectedLogDate = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+        renderLogPage();
       });
-  }
+    }
 
-  function upsertSettingsRemote(settings) {
-    if (!currentUser || !supabaseClient) return;
-    supabaseClient
-      .from("user_settings")
-      .upsert(
-        {
-          user_id: currentUser.id,
-          breakfast_time: settings.breakfast,
-          lunch_time: settings.lunch,
-          dinner_time: settings.dinner,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: "user_id" }
-      )
-      .then(function (res) {
-        if (res.error) console.error("[supabase] settings upsert failed", res.error);
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        var d = parseYmd(selectedLogDate);
+        d.setDate(d.getDate() + 1);
+        selectedLogDate = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+        renderLogPage();
       });
-  }
+    }
 
-  function upsertProfileRemote(profile) {
-    if (!currentUser || !supabaseClient) return;
-    supabaseClient
-      .from("user_settings")
-      .upsert(
-        {
-          user_id: currentUser.id,
-          display_name: profile.displayName || null,
-          age: typeof profile.age === "number" ? profile.age : null,
-          avatar_url: profile.avatarUrl || null,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: "user_id" }
-      )
-      .then(function (res) {
-        if (res.error) console.error("[supabase] profile upsert failed", res.error);
+    if (todayBtn) {
+      todayBtn.addEventListener("click", function () {
+        selectedLogDate = todayStr();
+        renderLogPage();
       });
-  }
+    }
 
-  function upsertGroupsRemote(groups) {
-    if (!currentUser || !supabaseClient) return;
-    supabaseClient
-      .from("daily_groups")
-      .upsert(
-        {
-          user_id: currentUser.id,
-          log_date: todayStr(),
-          groups: groups,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: "user_id,log_date" }
-      )
-      .then(function (res) {
-        if (res.error) console.error("[supabase] groups upsert failed", res.error);
+    var monthSelect = document.getElementById("history-month-select");
+    if (monthSelect) {
+      monthSelect.addEventListener("change", function (e) {
+        selectedHistoryMonth = e.target.value;
+        renderMonthlySummary();
       });
-  }
-
-  function initAccountFeatures() {
-    initSupabaseClient();
-
-    document.getElementById("account-btn").addEventListener("click", handleAccountBtnClick);
-    document.getElementById("auth-dialog-close").addEventListener("click", closeAuthDialog);
-    document.getElementById("auth-tab-signin").addEventListener("click", function () { setAuthMode("signin"); });
-    document.getElementById("auth-tab-signup").addEventListener("click", function () { setAuthMode("signup"); });
-    document.getElementById("auth-form").addEventListener("submit", handleAuthSubmit);
-    document.getElementById("auth-google-btn").addEventListener("click", handleGoogleSignIn);
-    document.getElementById("auth-dialog").addEventListener("click", function (e) {
-      if (e.target === document.getElementById("auth-dialog")) closeAuthDialog();
-    });
-
-    document.getElementById("profile-dialog-close").addEventListener("click", closeProfileDialog);
-    document.getElementById("profile-dialog").addEventListener("click", function (e) {
-      if (e.target === document.getElementById("profile-dialog")) closeProfileDialog();
-    });
-    document.getElementById("profile-avatar-input").addEventListener("change", handleAvatarInputChange);
-    document.getElementById("profile-signout-btn").addEventListener("click", function () {
-      confirmDialog("ต้องการออกจากระบบหรือไม่?", function () {
-        closeProfileDialog();
-        supabaseClient.auth.signOut();
-      });
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !document.getElementById("profile-dialog").hidden) {
-        closeProfileDialog();
-      }
-    });
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -2032,6 +2238,8 @@
   function init() {
     state = loadState();
     saveState();
+
+    initDateNavigator();
 
     // Navigation
     document.querySelectorAll("[data-nav]").forEach(function (el) {
