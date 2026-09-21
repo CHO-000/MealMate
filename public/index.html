@@ -11,11 +11,45 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,500,0,0">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
 <a href="#main-content" class="skip-link">ข้ามไปยังเนื้อหาหลัก</a>
+
+<aside class="side-nav" aria-label="เมนูหลัก">
+  <div class="side-nav__brand app-brand">
+    <span class="app-brand__logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22">
+        <path d="M19.7 4.3C13.2 4.6 7.4 7.5 5 13.1c-1.1 2.7.7 5.7 3.6 5.6 5.7-.2 9.5-5.9 11.1-14.4Z" fill="currentColor"/>
+        <path d="M5.6 18.2c2.3-4.1 5.6-6.9 10-8.6" fill="none" stroke="#0d5131" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <div>
+      <p class="app-brand__title">MealMate</p>
+      <p class="app-brand__subtitle">มื้อดี มีเวลา</p>
+    </div>
+  </div>
+  <nav class="side-nav__menu">
+    <button type="button" class="bottom-nav__item is-active" data-nav="home" aria-current="page">
+      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">home</span><span>หน้าแรก</span>
+    </button>
+    <button type="button" class="bottom-nav__item" data-nav="planner">
+      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">restaurant_menu</span><span>แนะนำเมนู</span>
+    </button>
+    <button type="button" class="bottom-nav__item" data-nav="log">
+      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">edit_note</span><span>บันทึกอาหาร</span>
+    </button>
+    <button type="button" class="bottom-nav__item" data-nav="progress">
+      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">monitoring</span><span>สรุปและตั้งค่า</span>
+    </button>
+  </nav>
+  <div class="side-nav__footer" aria-hidden="true">
+    <span>♧</span>
+    <p>กินดี มีเวลา<br>ดูแลตัวเองได้ทุกวัน</p>
+  </div>
+</aside>
 
 <header class="app-header">
   <div class="app-header__inner">
@@ -45,89 +79,91 @@
 <main id="main-content">
 
   <!-- PAGE A: HOME -->
-  <section class="page" id="page-home" data-page="home" aria-labelledby="home-heading">
-    <h1 id="home-heading" class="sr-only">หน้าแรก</h1>
-
-    <div class="food-bubbles" aria-hidden="true">
-      <span class="food-bubble food-bubble--1">
-        <svg viewBox="0 0 24 24">
-          <circle cx="9.3" cy="13.2" r="5.2" fill="#ef4444"/>
-          <circle cx="14.6" cy="13.2" r="5.2" fill="#ef4444"/>
-          <rect x="11.3" y="5" width="1.4" height="3.4" rx="0.7" fill="#7c4a03"/>
-          <ellipse cx="14.1" cy="5.9" rx="2.1" ry="1.2" fill="#16a34a" transform="rotate(-30 14.1 5.9)"/>
-        </svg>
-      </span>
-      <span class="food-bubble food-bubble--2">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 3 L21 19 A11 11 0 0 1 3 19 Z" fill="#fbbf24" stroke="#c2410c" stroke-width="1.2"/>
-          <circle cx="10.4" cy="12.6" r="1.1" fill="#c2410c"/>
-          <circle cx="14.2" cy="15" r="1.1" fill="#c2410c"/>
-          <circle cx="11.4" cy="16.6" r="1" fill="#c2410c"/>
-        </svg>
-      </span>
-      <span class="food-bubble food-bubble--3">
-        <svg viewBox="0 0 24 24">
-          <path d="M3 11h18a9 9 0 01-18 0z" fill="#fde68a" stroke="#c2410c" stroke-width="1.1"/>
-          <path d="M7 9c1-1.4 2-1.4 3 0s2 1.4 3 0 2-1.4 3 0 2 1.4 3 0" stroke="#f97316" stroke-width="1.3" fill="none" stroke-linecap="round"/>
-          <rect x="9.5" y="19.3" width="5" height="1.4" rx="0.7" fill="#fde68a"/>
-        </svg>
-      </span>
-      <span class="food-bubble food-bubble--4">
-        <svg viewBox="0 0 24 24">
-          <path d="M3 12h18a9 9 0 01-18 0z" fill="#fed7aa" stroke="#c2410c" stroke-width="1.1"/>
-          <ellipse cx="9" cy="9.4" rx="2.5" ry="1.7" fill="#16a34a" transform="rotate(-15 9 9.4)"/>
-          <ellipse cx="13.6" cy="8.6" rx="2.5" ry="1.7" fill="#22c55e" transform="rotate(10 13.6 8.6)"/>
-          <circle cx="16.3" cy="10.4" r="1.2" fill="#ef4444"/>
-        </svg>
-      </span>
+  <section class="page home-page" id="page-home" data-page="home" aria-labelledby="home-heading">
+    <div class="home-intro">
+      <div>
+        <p class="home-intro__eyebrow">สวัสดี</p>
+        <h1 id="home-heading">ให้ทุกมื้อของคุณ<br>เป็นก้าวเล็ก ๆ สู่สุขภาพที่ดี</h1>
+      </div>
+      <p class="home-intro__note">⌁ <span>กินดี มีเวลา<br>ชีวิตดีขึ้นได้ทุกวัน</span></p>
     </div>
 
-    <section class="card card--next-meal" aria-labelledby="next-meal-heading">
-      <h2 id="next-meal-heading" class="card__eyebrow">มื้อถัดไป</h2>
-      <p class="next-meal__name" id="next-meal-name">กำลังโหลด...</p>
-      <p class="next-meal__time" id="next-meal-time"></p>
-      <p class="next-meal__countdown" id="next-meal-countdown" aria-live="polite"></p>
-    </section>
+    <div class="home-dashboard">
+      <section class="card card--next-meal" aria-labelledby="next-meal-heading">
+        <div class="next-meal__content">
+          <h2 id="next-meal-heading" class="card__eyebrow">มื้อถัดไป</h2>
+          <p class="next-meal__name" id="next-meal-name">กำลังโหลด...</p>
+          <p class="next-meal__time" id="next-meal-time"></p>
+          <p class="next-meal__countdown" id="next-meal-countdown" aria-live="polite"></p>
+          <button type="button" class="next-meal__action" data-nav="log">🍴 บันทึกอาหาร <span aria-hidden="true">→</span></button>
+        </div>
+        <img class="next-meal__image" src="./assets/breakfast-hero.png" alt="อาหารครบหมู่สำหรับมื้อถัดไป">
+      </section>
 
-    <section class="card" aria-labelledby="summary-heading">
-      <h2 id="summary-heading" class="card__eyebrow">สรุปวันนี้</h2>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <p class="summary-item__value" id="summary-ontime">0/3</p>
-          <p class="summary-item__label">มื้อตรงเวลา</p>
+      <section class="card home-summary-card" aria-labelledby="summary-heading">
+        <div class="home-card-heading">
+          <h2 id="summary-heading" class="card__eyebrow">สรุปวันนี้</h2>
+          <button type="button" class="home-text-action" data-nav="progress">ดูรายละเอียด →</button>
         </div>
-        <div class="summary-item">
-          <p class="summary-item__value" id="summary-groups">0/5</p>
-          <p class="summary-item__label">อาหาร 5 หมู่</p>
+        <div class="summary-grid">
+          <div class="summary-item summary-item--ring">
+            <p class="summary-item__value" id="summary-ontime">0/3</p>
+            <p class="summary-item__label">มื้อตรงเวลา</p>
+          </div>
+          <div class="summary-item">
+            <p class="summary-item__value" id="summary-groups">0/5</p>
+            <p class="summary-item__label">อาหาร 5 หมู่</p>
+          </div>
+          <div class="summary-item">
+            <p class="summary-item__value" id="summary-kcal">0 kcal</p>
+            <p class="summary-item__label">พลังงานโดยประมาณ</p>
+          </div>
         </div>
-        <div class="summary-item">
-          <p class="summary-item__value" id="summary-kcal">0 kcal</p>
-          <p class="summary-item__label">พลังงานรวมโดยประมาณ</p>
+        <div class="home-groups-preview" aria-label="อาหาร 5 หมู่วันนี้">
+          <span data-home-group="veggie">🥦<small>ผัก</small></span>
+          <span data-home-group="protein">🥚<small>โปรตีน</small></span>
+          <span data-home-group="carb">🌾<small>แป้ง</small></span>
+          <span data-home-group="fruit">🍊<small>ผลไม้</small></span>
+          <span data-home-group="fat">🥑<small>ไขมัน</small></span>
         </div>
-      </div>
-      <div class="ai-inline" id="ai-encourage-wrap" hidden>
-        <button type="button" class="btn btn--ghost btn--ai" id="ai-encourage-btn">🤖 ขอกำลังใจจาก AI</button>
-        <p class="ai-note" id="ai-encourage-note" aria-live="polite"></p>
-      </div>
-    </section>
+      </section>
 
-    <section class="quick-actions-wrap" aria-labelledby="quick-actions-heading">
-      <h2 id="quick-actions-heading" class="sr-only">เมนูลัด</h2>
-      <div class="quick-actions">
-        <button type="button" class="quick-action" data-nav="planner">
-          <span class="quick-action__icon" aria-hidden="true">🍱</span>
-          <span>แนะนำเมนู</span>
-        </button>
-        <button type="button" class="quick-action" data-nav="log">
-          <span class="quick-action__icon" aria-hidden="true">📝</span>
-          <span>บันทึกอาหาร</span>
-        </button>
-        <button type="button" class="quick-action" data-nav="progress">
-          <span class="quick-action__icon" aria-hidden="true">📊</span>
-          <span>ดูสรุป</span>
-        </button>
-      </div>
-    </section>
+      <section class="card home-timeline-card" aria-labelledby="home-timeline-heading">
+        <div class="home-card-heading">
+          <h2 id="home-timeline-heading" class="card__eyebrow">มื้ออาหารวันนี้</h2>
+          <button type="button" class="home-text-action" data-nav="log">ดูทั้งหมด →</button>
+        </div>
+        <div class="home-timeline">
+          <div class="home-timeline__row" data-timeline-meal="breakfast"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อเช้า</b><small id="home-time-breakfast">07:30 น.</small></span><em id="home-status-breakfast">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="lunch"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อกลางวัน</b><small id="home-time-lunch">12:00 น.</small></span><em id="home-status-lunch">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="snack"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อว่าง</b><small>15:00 น.</small></span><em id="home-status-snack">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="dinner"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อเย็น</b><small id="home-time-dinner">18:00 น.</small></span><em id="home-status-dinner">รอเวลา</em></div>
+        </div>
+      </section>
+
+      <section class="card home-recommendations" aria-labelledby="home-recommendations-heading">
+        <div class="home-card-heading">
+          <h2 id="home-recommendations-heading" class="card__eyebrow">แนะนำเมนูสำหรับคุณ</h2>
+          <button type="button" class="home-text-action" data-nav="planner">ดูเมนูทั้งหมด →</button>
+        </div>
+        <div class="home-menu-grid">
+          <button type="button" class="home-menu-card" data-nav="planner"><img src="./assets/oatmeal-berries.png" alt=""><span><b>ข้าวโอ๊ตกล้วยเบอร์รี</b><small>มื้อเช้า · 320 kcal</small></span></button>
+          <button type="button" class="home-menu-card" data-nav="planner"><img src="./assets/grilled-chicken-salad.png" alt=""><span><b>สลัดอกไก่ย่าง</b><small>มื้อกลางวัน · 280 kcal</small></span></button>
+          <button type="button" class="home-menu-card" data-nav="planner"><img src="./assets/tofu-stir-fry.png" alt=""><span><b>ผัดผักรวมเต้าหู้</b><small>มื้อเย็น · 250 kcal</small></span></button>
+        </div>
+      </section>
+
+      <section class="home-ai-banner" aria-labelledby="home-ai-heading">
+        <span class="home-ai-banner__icon" aria-hidden="true">✦</span>
+        <div><h2 id="home-ai-heading">ผู้ช่วย AI เรื่องอาหาร</h2><p>ขอคำแนะนำเมนู โภชนาการ หรือกำลังใจสำหรับวันนี้</p></div>
+        <div class="ai-inline" id="ai-encourage-wrap" hidden>
+          <button type="button" class="btn btn--ghost btn--ai" id="ai-encourage-btn">ขอกำลังใจจาก AI</button>
+          <p class="ai-note" id="ai-encourage-note" aria-live="polite"></p>
+        </div>
+        <button type="button" class="home-ai-banner__action" id="home-chat-open" hidden>ถามผู้ช่วย AI →</button>
+        <button type="button" class="home-ai-banner__action home-ai-banner__action--planner" data-nav="planner">วางแผนเมนู →</button>
+      </section>
+    </div>
 
     <p class="disclaimer">ข้อมูลพลังงานและโภชนาการในแอปเป็นค่าประมาณเพื่อการศึกษาเท่านั้น ไม่ใช่การวินิจฉัยหรือคำแนะนำทางการแพทย์ และไม่ควรใช้แทนคำแนะนำจากผู้เชี่ยวชาญด้านสุขภาพ</p>
   </section>
@@ -398,12 +434,12 @@
 </main>
 
 <button type="button" class="chat-fab" id="chat-fab" aria-label="เปิดแชทผู้ช่วย AI" aria-haspopup="dialog" aria-expanded="false" hidden>
-  <span aria-hidden="true">💬</span>
+  <span class="chat-fab__icon material-symbols-rounded" aria-hidden="true">smart_toy</span>
 </button>
 
 <div class="chat-panel" id="chat-panel" hidden role="dialog" aria-modal="true" aria-labelledby="chat-panel-title">
   <div class="chat-panel__header">
-    <p id="chat-panel-title" class="chat-panel__title">🤖 ผู้ช่วย AI เรื่องอาหาร</p>
+    <p id="chat-panel-title" class="chat-panel__title"><span class="chat-panel__ai-icon material-symbols-rounded" aria-hidden="true">smart_toy</span>ผู้ช่วย AI เรื่องอาหาร</p>
     <button type="button" class="chat-panel__close" id="chat-panel-close" aria-label="ปิดแชท">✕</button>
   </div>
   <p class="chat-panel__hint">ถามได้ เช่น "มื้อเย็นงบ 40 บาทกินอะไรดี" หรือคำถามเรื่องโภชนาการทั่วไป (ไม่ใช่คำแนะนำทางการแพทย์)</p>
@@ -489,19 +525,19 @@
 
 <nav class="bottom-nav" aria-label="เมนูหลัก">
   <button type="button" class="bottom-nav__item is-active" data-nav="home" aria-current="page">
-    <span class="bottom-nav__icon" aria-hidden="true">🏠</span>
+    <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">home</span>
     <span>หน้าแรก</span>
   </button>
   <button type="button" class="bottom-nav__item" data-nav="planner">
-    <span class="bottom-nav__icon" aria-hidden="true">🍱</span>
+    <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">restaurant_menu</span>
     <span>แนะนำ</span>
   </button>
   <button type="button" class="bottom-nav__item" data-nav="log">
-    <span class="bottom-nav__icon" aria-hidden="true">📝</span>
+    <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">edit_note</span>
     <span>บันทึก</span>
   </button>
   <button type="button" class="bottom-nav__item" data-nav="progress">
-    <span class="bottom-nav__icon" aria-hidden="true">📊</span>
+    <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">monitoring</span>
     <span>สรุป</span>
   </button>
 </nav>
