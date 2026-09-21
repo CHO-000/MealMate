@@ -5,7 +5,7 @@
    the network/browser instead of crashing the page.
    ========================================================================== */
 
-var CACHE_NAME = "mealmate-cache-v3";
+var CACHE_NAME = "mealmate-cache-v7-modern-navigation";
 var ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -13,7 +13,17 @@ var ASSETS_TO_CACHE = [
   "./app.js",
   "./manifest.json",
   "./assets/icon-192.png",
-  "./assets/icon-512.png"
+  "./assets/icon-512.png",
+  "./assets/breakfast-hero.png",
+  "./assets/oatmeal-berries.png",
+  "./assets/grilled-chicken-salad.png",
+  "./assets/tofu-stir-fry.png",
+  "./assets/menu-thai-basil-rice.png",
+  "./assets/menu-grilled-chicken-rice.png",
+  "./assets/menu-vegetable-fried-rice.png",
+  "./assets/menu-thai-congee.png",
+  "./assets/menu-thai-noodle-soup.png",
+  "./assets/menu-omelette-rice.png"
 ];
 
 self.addEventListener("install", function (event) {

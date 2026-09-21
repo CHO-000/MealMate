@@ -91,6 +91,7 @@
       id: "kaprao-chicken",
       name: "ข้าวกะเพราไก่ไข่ดาว",
       emoji: "🍳",
+      image: "./assets/menu-thai-basil-rice.png",
       meal: ["lunch", "dinner"],
       price: 45,
       time: 15,
@@ -105,6 +106,7 @@
       id: "grilled-chicken-rice",
       name: "ข้าวไก่ย่าง",
       emoji: "🍗",
+      image: "./assets/menu-grilled-chicken-rice.png",
       meal: ["lunch", "dinner"],
       price: 50,
       time: 20,
@@ -119,6 +121,7 @@
       id: "veggie-fried-rice",
       name: "ข้าวผัดผัก",
       emoji: "🥦",
+      image: "./assets/menu-vegetable-fried-rice.png",
       meal: ["breakfast", "lunch", "dinner"],
       price: 35,
       time: 10,
@@ -133,6 +136,7 @@
       id: "chicken-breast-salad",
       name: "สลัดอกไก่",
       emoji: "🥗",
+      image: "./assets/grilled-chicken-salad.png",
       meal: ["lunch", "dinner"],
       price: 55,
       time: 10,
@@ -147,6 +151,7 @@
       id: "fish-congee",
       name: "ข้าวต้มปลา",
       emoji: "🐟",
+      image: "./assets/menu-thai-congee.png",
       meal: ["breakfast"],
       price: 40,
       time: 15,
@@ -161,6 +166,7 @@
       id: "chicken-porridge",
       name: "โจ๊กไก่",
       emoji: "🥣",
+      image: "./assets/menu-thai-congee.png",
       meal: ["breakfast"],
       price: 30,
       time: 10,
@@ -175,6 +181,7 @@
       id: "chicken-noodle-soup",
       name: "ก๋วยเตี๋ยวไก่",
       emoji: "🍜",
+      image: "./assets/menu-thai-noodle-soup.png",
       meal: ["lunch", "dinner"],
       price: 40,
       time: 15,
@@ -189,6 +196,7 @@
       id: "omelette-rice",
       name: "ข้าวไข่เจียว",
       emoji: "🍳",
+      image: "./assets/menu-omelette-rice.png",
       meal: ["breakfast", "lunch", "dinner"],
       price: 35,
       time: 10,
@@ -203,6 +211,7 @@
       id: "tofu-veggie-rice",
       name: "ข้าวเต้าหู้ผัดผัก",
       emoji: "🌱",
+      image: "./assets/tofu-stir-fry.png",
       meal: ["lunch", "dinner"],
       price: 40,
       time: 15,
@@ -217,6 +226,7 @@
       id: "chicken-suki",
       name: "สุกี้น้ำไก่",
       emoji: "🍲",
+      image: "./assets/menu-thai-noodle-soup.png",
       meal: ["lunch", "dinner"],
       price: 45,
       time: 20,
@@ -231,6 +241,7 @@
       id: "deboned-fish-rice",
       name: "ข้าวปลาแกะ",
       emoji: "🐠",
+      image: "./assets/menu-grilled-chicken-rice.png",
       meal: ["lunch", "dinner"],
       price: 50,
       time: 20,
@@ -245,6 +256,7 @@
       id: "glass-noodle-salad-pork",
       name: "ยำวุ้นเส้นหมูสับ",
       emoji: "🌶️",
+      image: "./assets/menu-thai-noodle-soup.png",
       meal: ["lunch", "dinner"],
       price: 45,
       time: 15,
@@ -259,6 +271,7 @@
       id: "veggie-curry-rice",
       name: "ข้าวแกงผัก",
       emoji: "🍛",
+      image: "./assets/tofu-stir-fry.png",
       meal: ["lunch", "dinner"],
       price: 35,
       time: 10,
@@ -273,6 +286,7 @@
       id: "egg-sandwich",
       name: "แซนด์วิชไข่",
       emoji: "🥪",
+      image: "./assets/breakfast-hero.png",
       meal: ["breakfast"],
       price: 30,
       time: 10,
@@ -287,6 +301,7 @@
       id: "fruit-yogurt",
       name: "โยเกิร์ตผลไม้",
       emoji: "🍓",
+      image: "./assets/oatmeal-berries.png",
       meal: ["breakfast"],
       price: 25,
       time: 10,
@@ -301,6 +316,7 @@
       id: "garlic-pork-rice",
       name: "ข้าวหมูทอดกระเทียม",
       emoji: "🍖",
+      image: "./assets/menu-thai-basil-rice.png",
       meal: ["lunch", "dinner"],
       price: 45,
       time: 20,
@@ -410,6 +426,33 @@
     return days[date.getDay()] + " " + date.getDate() + " " + months[date.getMonth()] + " " + buddhistYear;
   }
 
+  function getBangkokHour() {
+    var parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Bangkok",
+      hour: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(new Date());
+    var hourPart = parts.find(function (part) { return part.type === "hour"; });
+    var hour = Number(hourPart ? hourPart.value : 12);
+    return hour === 24 ? 0 : hour;
+  }
+
+  function applyBangkokTimeTheme() {
+    var hour = getBangkokHour();
+    var theme = "day";
+    if (hour >= 5 && hour < 10) theme = "morning";
+    else if (hour >= 10 && hour < 16) theme = "day";
+    else if (hour >= 16 && hour < 19) theme = "evening";
+    else theme = "night";
+
+    document.body.setAttribute("data-time-theme", theme);
+    document.body.setAttribute("data-bangkok-hour", String(hour));
+    var metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute("content", theme === "night" ? "#071f1a" : "#0d5131");
+    }
+  }
+
   function formatThaiMonthLabel(monthKey) {
     if (!monthKey || monthKey.length < 7) return "";
     var parts = monthKey.split("-");
@@ -442,6 +485,10 @@
     return state.logs.filter(function (l) {
       return l.date === targetDate;
     });
+  }
+
+  function getTodayLogs() {
+    return getLogsForDate(todayStr());
   }
 
   function loggedMealsToday() {
@@ -492,7 +539,15 @@
 
   function renderHeaderDate() {
     var el = document.getElementById("header-date");
-    if (el) el.textContent = formatThaiDate(new Date());
+    if (el) {
+      el.textContent = new Intl.DateTimeFormat("th-TH-u-ca-buddhist", {
+        timeZone: "Asia/Bangkok",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }).format(new Date());
+    }
   }
 
   function renderNextMeal() {
@@ -528,12 +583,43 @@
     document.getElementById("summary-ontime").textContent = cappedOnTime + "/3";
     document.getElementById("summary-groups").textContent = groupsCount + "/5";
     document.getElementById("summary-kcal").textContent = totalKcal + " kcal";
+
+    document.querySelectorAll("[data-home-group]").forEach(function (item) {
+      var group = item.getAttribute("data-home-group");
+      item.classList.toggle("is-complete", state.groupsSelected.indexOf(group) !== -1);
+    });
+  }
+
+  function renderHomeTimeline() {
+    var logged = loggedMealsToday();
+    var next = computeNextMeal();
+    var times = {
+      breakfast: state.settings.breakfast,
+      lunch: state.settings.lunch,
+      snack: "15:00",
+      dinner: state.settings.dinner
+    };
+
+    ["breakfast", "lunch", "snack", "dinner"].forEach(function (key) {
+      var row = document.querySelector('[data-timeline-meal="' + key + '"]');
+      var status = document.getElementById("home-status-" + key);
+      var time = document.getElementById("home-time-" + key);
+      if (time) time.textContent = times[key] + " น.";
+      if (!row || !status) return;
+
+      var isDone = !!logged[key];
+      var isCurrent = !isDone && next && next.key === key;
+      row.classList.toggle("is-complete", isDone);
+      row.classList.toggle("is-current", isCurrent);
+      status.textContent = isDone ? "บันทึกแล้ว" : (isCurrent ? "มื้อถัดไป" : "รอเวลา");
+    });
   }
 
   function renderHome() {
     renderHeaderDate();
     renderNextMeal();
     renderDailySummary();
+    renderHomeTimeline();
   }
 
   /* ------------------------------------------------------------------ */
@@ -689,8 +775,8 @@
     var groupNames = item.groups.map(function (g) { return GROUP_LABELS[g]; }).join(", ");
 
     card.innerHTML =
+      '<img class="menu-card__image" src="' + escapeHtml(item.image || "./assets/breakfast-hero.png") + '" alt="' + escapeHtml(item.name) + '">' +
       '<div class="menu-card__header">' +
-      '<span class="menu-card__emoji" aria-hidden="true">' + item.emoji + "</span>" +
       '<div><p class="menu-card__name">' + escapeHtml(item.name) + "</p></div>" +
       "</div>" +
       '<div class="menu-card__meta">' +
@@ -1597,6 +1683,7 @@
   /* ------------------------------------------------------------------ */
 
   function navigateTo(pageKey) {
+    document.body.setAttribute("data-active-page", pageKey);
     var pages = document.querySelectorAll(".page");
     pages.forEach(function (page) {
       page.hidden = page.getAttribute("data-page") !== pageKey;
@@ -1679,6 +1766,7 @@
         if (aiFeaturesAvailable) {
           document.getElementById("chat-fab").hidden = false;
           document.getElementById("ai-encourage-wrap").hidden = false;
+          document.getElementById("home-chat-open").hidden = false;
         }
       })
       .catch(function () {
@@ -1850,6 +1938,7 @@
     document.getElementById("chat-fab").addEventListener("click", function () {
       if (chatOpen) closeChat(); else openChat();
     });
+    document.getElementById("home-chat-open").addEventListener("click", openChat);
     document.getElementById("chat-panel-close").addEventListener("click", closeChat);
     document.getElementById("chat-form").addEventListener("submit", handleChatSubmit);
     document.addEventListener("keydown", function (e) {
@@ -2362,6 +2451,7 @@
   function init() {
     state = loadState();
     saveState();
+    applyBangkokTimeTheme();
 
     initDateNavigator();
 
@@ -2410,6 +2500,7 @@
       var homePage = document.getElementById("page-home");
       if (!homePage.hidden) renderHome();
     }, 30000);
+    setInterval(applyBangkokTimeTheme, 60000);
 
     registerServiceWorker();
     initAiFeatures();
