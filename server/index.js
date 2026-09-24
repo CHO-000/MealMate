@@ -67,6 +67,29 @@ const MEAL_LABEL_TH = {
 
 const VALID_GROUPS = ["carb", "protein", "veggie", "fruit", "fat"];
 
+function normalizeFoodGroup(value) {
+  var key = String(value || "").trim().toLowerCase();
+  var aliases = {
+    carbohydrate: "carb",
+    carbohydrates: "carb",
+    rice: "carb",
+    starch: "carb",
+    meat: "protein",
+    egg: "protein",
+    eggs: "protein",
+    veg: "veggie",
+    vegetable: "veggie",
+    vegetables: "veggie",
+    fiber: "veggie",
+    fibre: "veggie",
+    fruits: "fruit",
+    oil: "fat",
+    fats: "fat"
+  };
+  key = aliases[key] || key;
+  return VALID_GROUPS.indexOf(key) !== -1 ? key : "";
+}
+
 const SYSTEM_PROMPT =
   "คุณคือผู้ช่วยของแอป MealMate ซึ่งช่วยนักศึกษาไทยเลือกมื้ออาหารให้เหมาะกับเวลาและงบประมาณ " +
   "ตอบเป็นภาษาไทย น้ำเสียงเป็นมิตร ให้กำลังใจ ไม่กล่าวโทษผู้ใช้ ไม่ตัดสิน " +
@@ -109,6 +132,7 @@ app.post("/api/ai/plan-menu", async function (req, res) {
     var goalLabel = { balanced: "สมดุล", protein: "เน้นโปรตีน", light: "เบา" }[goal];
     var dietLabel = { general: "ทั่วไป", "no-pork": "ไม่กินหมู", vegetarian: "มังสวิรัติ" }[diet];
     var userPrompt =
+      "/no_think\n" +
       "สร้างเมนูอาหารไทยที่หาได้จริง 3 เมนูสำหรับผู้ใช้ตามข้อจำกัดต่อไปนี้\n" +
       "มื้อ: " + MEAL_LABEL_TH[meal] + "\n" +
       "เวลาที่มีไม่เกิน: " + time + " นาที\n" +
@@ -155,7 +179,9 @@ app.post("/api/ai/plan-menu", async function (req, res) {
     var menus = Array.isArray(parsed && parsed.menus) ? parsed.menus : [];
     menus = menus.slice(0, 3).map(function (menu, index) {
       var groups = Array.isArray(menu.groups)
-        ? menu.groups.filter(function (group) { return VALID_GROUPS.indexOf(group) !== -1; }).slice(0, 5)
+        ? menu.groups.map(normalizeFoodGroup).filter(Boolean).filter(function (group, groupIndex, list) {
+          return list.indexOf(group) === groupIndex;
+        }).slice(0, 5)
         : [];
       return {
         id: "ai-" + Date.now() + "-" + index,
