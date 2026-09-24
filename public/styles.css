@@ -2941,6 +2941,8 @@ body[data-time-theme] {
   background: #fff;
   color: var(--color-primary);
   font-size: 27px;
+  object-fit: cover;
+  overflow: hidden;
   box-shadow: none;
   transform: none;
 }
