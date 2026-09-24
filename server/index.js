@@ -158,7 +158,7 @@ app.post("/api/ai/plan-menu", async function (req, res) {
         },
         { role: "user", content: userPrompt }
       ],
-      { temperature: 0.55, timeoutMs: 20000, maxTokens: 2200 }
+      { temperature: 0.55, timeoutMs: 20000 }
     );
 
     var jsonText = String(text || "").trim();
