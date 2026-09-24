@@ -20,12 +20,7 @@
 
 <aside class="side-nav" aria-label="เมนูหลัก">
   <div class="side-nav__brand app-brand">
-    <span class="app-brand__logo" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="22" height="22">
-        <path d="M19.7 4.3C13.2 4.6 7.4 7.5 5 13.1c-1.1 2.7.7 5.7 3.6 5.6 5.7-.2 9.5-5.9 11.1-14.4Z" fill="currentColor"/>
-        <path d="M5.6 18.2c2.3-4.1 5.6-6.9 10-8.6" fill="none" stroke="#0d5131" stroke-width="1.7" stroke-linecap="round"/>
-      </svg>
-    </span>
+    <span class="app-brand__logo material-symbols-rounded" aria-hidden="true">eco</span>
     <div>
       <p class="app-brand__title">MealMate</p>
       <p class="app-brand__subtitle">มื้อดี มีเวลา</p>
@@ -41,12 +36,15 @@
     <button type="button" class="bottom-nav__item" data-nav="log">
       <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">edit_note</span><span>บันทึกอาหาร</span>
     </button>
-    <button type="button" class="bottom-nav__item" data-nav="progress">
-      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">monitoring</span><span>สรุปและตั้งค่า</span>
+    <button type="button" class="bottom-nav__item" data-nav="progress" data-progress-target="summary">
+      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">monitoring</span><span>สรุป</span>
+    </button>
+    <button type="button" class="bottom-nav__item" data-nav="progress" data-progress-target="settings">
+      <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">settings</span><span>ตั้งค่า</span>
     </button>
   </nav>
   <div class="side-nav__footer" aria-hidden="true">
-    <span>♧</span>
+    <span class="material-symbols-rounded">eco</span>
     <p>กินดี มีเวลา<br>ดูแลตัวเองได้ทุกวัน</p>
   </div>
 </aside>
@@ -54,13 +52,7 @@
 <header class="app-header">
   <div class="app-header__inner">
     <div class="app-brand">
-      <span class="app-brand__logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-          <path d="M3.5 11.5h17a1 1 0 011 1A9.5 9.5 0 0112 22a9.5 9.5 0 01-9.5-9.5 1 1 0 011-1z" fill="#fff"/>
-          <rect x="9.3" y="21.2" width="5.4" height="1.5" rx="0.75" fill="#fff"/>
-          <path d="M8 4.4c-.9 1-.9 2 0 3M12.2 3.4c-.9 1-.9 2 0 3M16.4 4.4c-.9 1-.9 2 0 3" stroke="#fff" stroke-width="1.3" stroke-linecap="round" fill="none" opacity="0.85"/>
-        </svg>
-      </span>
+      <span class="app-brand__logo material-symbols-rounded" aria-hidden="true">eco</span>
       <div>
         <p class="app-brand__title">MealMate</p>
         <p class="app-brand__subtitle">มื้อดีมีเวลา</p>
@@ -85,7 +77,7 @@
         <p class="home-intro__eyebrow">สวัสดี</p>
         <h1 id="home-heading">ให้ทุกมื้อของคุณ<br>เป็นก้าวเล็ก ๆ สู่สุขภาพที่ดี</h1>
       </div>
-      <p class="home-intro__note">⌁ <span>กินดี มีเวลา<br>ชีวิตดีขึ้นได้ทุกวัน</span></p>
+      <p class="home-intro__note"><span class="material-symbols-rounded" aria-hidden="true">eco</span><span>กินดี มีเวลา<br>ชีวิตดีขึ้นได้ทุกวัน</span></p>
     </div>
 
     <div class="home-dashboard">
@@ -95,7 +87,7 @@
           <p class="next-meal__name" id="next-meal-name">กำลังโหลด...</p>
           <p class="next-meal__time" id="next-meal-time"></p>
           <p class="next-meal__countdown" id="next-meal-countdown" aria-live="polite"></p>
-          <button type="button" class="next-meal__action" data-nav="log">🍴 บันทึกอาหาร <span aria-hidden="true">→</span></button>
+          <button type="button" class="next-meal__action" data-nav="log"><span class="material-symbols-rounded" aria-hidden="true">restaurant</span>บันทึกอาหาร <span aria-hidden="true">→</span></button>
         </div>
         <img class="next-meal__image" src="./assets/breakfast-hero.png" alt="อาหารครบหมู่สำหรับมื้อถัดไป">
       </section>
@@ -120,11 +112,11 @@
           </div>
         </div>
         <div class="home-groups-preview" aria-label="อาหาร 5 หมู่วันนี้">
-          <span data-home-group="veggie">🥦<small>ผัก</small></span>
-          <span data-home-group="protein">🥚<small>โปรตีน</small></span>
-          <span data-home-group="carb">🌾<small>แป้ง</small></span>
-          <span data-home-group="fruit">🍊<small>ผลไม้</small></span>
-          <span data-home-group="fat">🥑<small>ไขมัน</small></span>
+          <span data-home-group="veggie"><i class="material-symbols-rounded" aria-hidden="true">nutrition</i><small>ผัก</small></span>
+          <span data-home-group="protein"><i class="material-symbols-rounded" aria-hidden="true">egg</i><small>โปรตีน</small></span>
+          <span data-home-group="carb"><i class="material-symbols-rounded" aria-hidden="true">bakery_dining</i><small>แป้ง</small></span>
+          <span data-home-group="fruit"><i class="material-symbols-rounded" aria-hidden="true">grocery</i><small>ผลไม้</small></span>
+          <span data-home-group="fat"><i class="material-symbols-rounded" aria-hidden="true">water_drop</i><small>ไขมัน</small></span>
         </div>
       </section>
 
@@ -134,10 +126,10 @@
           <button type="button" class="home-text-action" data-nav="log">ดูทั้งหมด →</button>
         </div>
         <div class="home-timeline">
-          <div class="home-timeline__row" data-timeline-meal="breakfast"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อเช้า</b><small id="home-time-breakfast">07:30 น.</small></span><em id="home-status-breakfast">รอเวลา</em></div>
-          <div class="home-timeline__row" data-timeline-meal="lunch"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อกลางวัน</b><small id="home-time-lunch">12:00 น.</small></span><em id="home-status-lunch">รอเวลา</em></div>
-          <div class="home-timeline__row" data-timeline-meal="snack"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อว่าง</b><small>15:00 น.</small></span><em id="home-status-snack">รอเวลา</em></div>
-          <div class="home-timeline__row" data-timeline-meal="dinner"><span class="home-timeline__dot"></span><span class="home-timeline__icon">◷</span><span><b>มื้อเย็น</b><small id="home-time-dinner">18:00 น.</small></span><em id="home-status-dinner">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="breakfast"><span class="home-timeline__dot"></span><span class="home-timeline__icon material-symbols-rounded">wb_twilight</span><span><b>มื้อเช้า</b><small id="home-time-breakfast">07:30 น.</small></span><em id="home-status-breakfast">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="lunch"><span class="home-timeline__dot"></span><span class="home-timeline__icon material-symbols-rounded">light_mode</span><span><b>มื้อกลางวัน</b><small id="home-time-lunch">12:00 น.</small></span><em id="home-status-lunch">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="snack"><span class="home-timeline__dot"></span><span class="home-timeline__icon material-symbols-rounded">schedule</span><span><b>มื้อว่าง</b><small>15:00 น.</small></span><em id="home-status-snack">รอเวลา</em></div>
+          <div class="home-timeline__row" data-timeline-meal="dinner"><span class="home-timeline__dot"></span><span class="home-timeline__icon material-symbols-rounded">dark_mode</span><span><b>มื้อเย็น</b><small id="home-time-dinner">18:00 น.</small></span><em id="home-status-dinner">รอเวลา</em></div>
         </div>
       </section>
 
@@ -154,7 +146,7 @@
       </section>
 
       <section class="home-ai-banner" aria-labelledby="home-ai-heading">
-        <span class="home-ai-banner__icon" aria-hidden="true">✦</span>
+        <span class="home-ai-banner__icon material-symbols-rounded" aria-hidden="true">smart_toy</span>
         <div><h2 id="home-ai-heading">ผู้ช่วย AI เรื่องอาหาร</h2><p>ขอคำแนะนำเมนู โภชนาการ หรือกำลังใจสำหรับวันนี้</p></div>
         <div class="ai-inline" id="ai-encourage-wrap" hidden>
           <button type="button" class="btn btn--ghost btn--ai" id="ai-encourage-btn">ขอกำลังใจจาก AI</button>
@@ -170,10 +162,15 @@
 
   <!-- PAGE B: MEAL PLANNER -->
   <section class="page" id="page-planner" data-page="planner" hidden aria-labelledby="planner-heading">
-    <h1 id="planner-heading" class="page-title">แนะนำเมนู</h1>
-    <p class="page-subtitle">บอกเวลาและงบที่มี เดี๋ยวเราช่วยเลือกให้</p>
+    <div class="page-heading">
+      <p class="page-kicker">แนะนำเมนู</p>
+      <h1 id="planner-heading" class="page-title">แนะนำเมนู</h1>
+      <p class="page-subtitle">บอกเวลาและงบที่มี เดี๋ยวเราช่วยเลือกให้</p>
+    </div>
 
-    <form id="planner-form" class="card form" novalidate>
+    <div class="planner-layout">
+    <form id="planner-form" class="card form planner-form" novalidate>
+      <h2 class="card__eyebrow">ระบุสิ่งที่คุณต้องการ</h2>
       <div class="field">
         <label for="planner-meal">มื้ออาหาร</label>
         <select id="planner-meal" name="meal" required>
@@ -205,6 +202,8 @@
         <p class="field-error" id="error-budget" role="alert"></p>
       </div>
 
+      <details class="planner-advanced" open>
+        <summary>ตัวเลือกเพิ่มเติม</summary>
       <div class="field">
         <label for="planner-goal">เป้าหมาย</label>
         <select id="planner-goal" name="goal" required>
@@ -232,34 +231,49 @@
         <input type="text" id="planner-exclude" name="exclude" placeholder="เช่น ถั่ว, นม, ไข่">
         <p class="field-hint">คั่นด้วยเครื่องหมายจุลภาค เว้นว่างได้ถ้าไม่มี</p>
       </div>
+      </details>
 
-      <button type="submit" class="btn btn--primary btn--full">แนะนำเมนูให้ฉัน</button>
+      <button type="submit" class="btn btn--primary btn--full"><span>แนะนำเมนูให้ฉัน</span><span aria-hidden="true">→</span></button>
     </form>
 
-    <section id="planner-results" class="planner-results" aria-live="polite"></section>
+    <div class="planner-output card">
+      <div class="planner-results-heading">
+        <div><p class="page-kicker">ผลลัพธ์ตามเงื่อนไข</p><h2 class="card__eyebrow">เมนูที่เหมาะกับคุณ</h2></div>
+        <button type="button" class="home-text-action planner-edit-action" id="planner-edit-action"><span class="material-symbols-rounded" aria-hidden="true">edit</span>แก้ไขเงื่อนไข</button>
+      </div>
+      <div class="planner-criteria-summary" id="planner-criteria-summary" aria-label="เงื่อนไขที่เลือก" hidden></div>
+      <section id="planner-results" class="planner-results" aria-live="polite">
+        <div class="planner-placeholder"><span class="material-symbols-rounded" aria-hidden="true">restaurant_menu</span><p>เลือกเงื่อนไขแล้วกด “แนะนำเมนูให้ฉัน”</p></div>
+      </section>
 
-    <section class="ai-block" id="ai-suggest-wrap" hidden aria-labelledby="ai-suggest-heading">
-      <h2 id="ai-suggest-heading" class="sr-only">คำอธิบายจาก AI</h2>
-      <button type="button" class="btn btn--ghost btn--ai btn--full" id="ai-suggest-btn">🤖 ให้ AI ช่วยอธิบายเมนูเหล่านี้</button>
-      <p class="ai-note" id="ai-suggest-note" aria-live="polite"></p>
-    </section>
+      <section class="ai-block" id="ai-suggest-wrap" hidden aria-labelledby="ai-suggest-heading">
+        <span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>
+        <div><h2 id="ai-suggest-heading">อยากรู้ว่าทำไมเราถึงแนะนำเมนูเหล่านี้?</h2><p>AI จะอธิบายจากเมนูที่ระบบคัดเลือกไว้ โดยไม่เปลี่ยนผลลัพธ์เดิม</p></div>
+        <button type="button" class="btn btn--ghost btn--ai" id="ai-suggest-btn">ดูคำอธิบาย</button>
+        <p class="ai-note" id="ai-suggest-note" aria-live="polite"></p>
+      </section>
+    </div>
+    </div>
   </section>
 
   <!-- PAGE C: FOOD LOG -->
   <section class="page" id="page-log" data-page="log" hidden aria-labelledby="log-heading">
-    <h1 id="log-heading" class="page-title">บันทึกอาหาร</h1>
-    <p class="page-subtitle">จดไว้เร็ว ๆ ไม่ต้องกรอกเยอะ</p>
-
-    <div class="date-navigator card">
+    <div class="log-heading-row">
+      <div><h1 id="log-heading" class="page-title">บันทึกอาหาร</h1><p class="page-subtitle">จดไว้เร็ว ๆ ไม่ต้องกรอกเยอะ</p></div>
+      <div class="date-navigator">
       <button type="button" class="btn btn--ghost btn--small date-nav-btn" id="log-date-prev" aria-label="วันก่อนหน้า">◀</button>
       <div class="date-navigator__center">
-        <input type="date" id="log-date-picker" class="date-picker-input">
+        <input type="date" id="log-date-picker" class="date-picker-input sr-only">
+        <button type="button" class="date-picker-display" id="log-date-display" aria-label="เลือกวันที่บันทึก"><span class="material-symbols-rounded" aria-hidden="true">calendar_month</span><span id="log-date-label"></span></button>
         <button type="button" class="btn btn--ghost btn--small date-today-btn" id="log-date-today-btn">วันนี้</button>
       </div>
       <button type="button" class="btn btn--ghost btn--small date-nav-btn" id="log-date-next" aria-label="วันถัดไป">▶</button>
+      </div>
     </div>
 
-    <form id="log-form" class="card form" novalidate>
+    <div class="log-layout">
+    <form id="log-form" class="card form log-form" novalidate>
+      <h2 class="card__eyebrow">บันทึกมื้ออาหาร</h2>
       <div class="field">
         <label for="log-name">ชื่ออาหาร</label>
         <input type="text" id="log-name" name="name" placeholder="เช่น ข้าวกะเพราไก่ไข่ดาว">
@@ -303,7 +317,7 @@
       <button type="submit" class="btn btn--primary btn--full" id="log-submit-btn">บันทึกอาหาร</button>
     </form>
 
-    <section aria-labelledby="log-list-heading">
+    <section class="card log-history-card" aria-labelledby="log-list-heading">
       <div class="section-title-wrap">
         <h2 id="log-list-heading" class="section-title">รายการอาหาร</h2>
         <span class="log-list-summary-badge" id="log-list-summary-badge">0 kcal</span>
@@ -311,14 +325,22 @@
       <ul class="log-list" id="log-list"></ul>
       <p class="empty-hint" id="log-empty" hidden>ยังไม่มีรายการอาหารวันนี้ เริ่มบันทึกมื้อแรกได้เลย</p>
     </section>
+    </div>
   </section>
 
   <!-- PAGE D: PROGRESS & SETTINGS -->
   <section class="page" id="page-progress" data-page="progress" hidden aria-labelledby="progress-heading">
     <h1 id="progress-heading" class="page-title">สรุปและตั้งค่า</h1>
 
-    <section class="card" aria-labelledby="daily-progress-heading">
-      <h2 id="daily-progress-heading" class="card__eyebrow">ความคืบหน้าวันนี้</h2>
+    <div class="progress-tabs" role="tablist" aria-label="สรุปและตั้งค่า">
+      <button type="button" class="progress-tab is-active" id="progress-tab-summary" role="tab" aria-selected="true" aria-controls="progress-panel-summary" data-progress-tab="summary">สรุป</button>
+      <button type="button" class="progress-tab" id="progress-tab-settings" role="tab" aria-selected="false" aria-controls="progress-panel-settings" data-progress-tab="settings">ตั้งค่า</button>
+    </div>
+
+    <div class="progress-tab-panel is-active" id="progress-panel-summary" role="tabpanel" aria-labelledby="progress-tab-summary" data-progress-panel="summary">
+
+    <section class="card progress-overview-card" aria-labelledby="daily-progress-heading">
+      <h2 id="daily-progress-heading" class="card__eyebrow">ภาพรวมวันนี้</h2>
       <div class="summary-grid">
         <div class="summary-item">
           <p class="summary-item__value" id="progress-meal-count">0 มื้อ</p>
@@ -335,15 +357,28 @@
       </div>
     </section>
 
-    <section class="card" aria-labelledby="groups-heading">
+    <section class="card progress-groups-card" aria-labelledby="groups-heading">
       <h2 id="groups-heading" class="card__eyebrow">อาหาร 5 หมู่วันนี้</h2>
       <p class="field-hint">แตะเพื่อบันทึกว่าวันนี้กินหมู่ไหนบ้าง</p>
       <div class="group-toggles" id="group-toggles" role="group" aria-labelledby="groups-heading">
-        <button type="button" class="group-toggle" data-group="carb">🍚 คาร์โบไฮเดรต</button>
-        <button type="button" class="group-toggle" data-group="protein">🍗 โปรตีน</button>
-        <button type="button" class="group-toggle" data-group="veggie">🥦 ผัก</button>
-        <button type="button" class="group-toggle" data-group="fruit">🍎 ผลไม้</button>
-        <button type="button" class="group-toggle" data-group="fat">🥑 ไขมัน</button>
+        <button type="button" class="group-toggle" data-group="carb"><span class="material-symbols-rounded" aria-hidden="true">bakery_dining</span>คาร์โบไฮเดรต</button>
+        <button type="button" class="group-toggle" data-group="protein"><span class="material-symbols-rounded" aria-hidden="true">egg</span>โปรตีน</button>
+        <button type="button" class="group-toggle" data-group="veggie"><span class="material-symbols-rounded" aria-hidden="true">nutrition</span>ผัก</button>
+        <button type="button" class="group-toggle" data-group="fruit"><span class="material-symbols-rounded" aria-hidden="true">grocery</span>ผลไม้</button>
+        <button type="button" class="group-toggle" data-group="fat"><span class="material-symbols-rounded" aria-hidden="true">water_drop</span>ไขมัน</button>
+      </div>
+    </section>
+
+    <section class="card schedule-preview-card" aria-labelledby="schedule-preview-heading">
+      <div class="home-card-heading">
+        <h2 id="schedule-preview-heading" class="card__eyebrow">ตั้งเวลามื้ออาหาร</h2>
+        <button type="button" class="home-text-action" data-nav="progress" data-progress-target="settings">ไปที่การตั้งค่า →</button>
+      </div>
+      <p class="field-hint">เวลาที่ใช้คำนวณมื้อถัดไปและสถานะตรงเวลา</p>
+      <div class="schedule-preview-list">
+        <div><span class="material-symbols-rounded" aria-hidden="true">wb_twilight</span><b>มื้อเช้า</b><time id="summary-setting-breakfast">07:30</time></div>
+        <div><span class="material-symbols-rounded" aria-hidden="true">light_mode</span><b>มื้อกลางวัน</b><time id="summary-setting-lunch">12:00</time></div>
+        <div><span class="material-symbols-rounded" aria-hidden="true">dark_mode</span><b>มื้อเย็น</b><time id="summary-setting-dinner">18:00</time></div>
       </div>
     </section>
 
@@ -351,7 +386,7 @@
     <section class="card history-section" aria-labelledby="monthly-history-heading">
       <div class="history-header">
         <div>
-          <h2 id="monthly-history-heading" class="card__eyebrow">📊 สรุปประวัติรายเดือน</h2>
+          <h2 id="monthly-history-heading" class="card__eyebrow"><span class="material-symbols-rounded" aria-hidden="true">monitoring</span>สรุปประวัติรายเดือน</h2>
           <p class="history-subtitle">สถิติและประวัติการกินย้อนหลัง</p>
         </div>
         <select id="history-month-select" class="history-month-select" aria-label="เลือกเดือนที่ต้องการดูสรุป"></select>
@@ -359,28 +394,28 @@
 
       <div class="monthly-stats-grid">
         <div class="monthly-stat-card">
-          <span class="monthly-stat-card__icon" aria-hidden="true">📅</span>
+          <span class="monthly-stat-card__icon material-symbols-rounded" aria-hidden="true">calendar_month</span>
           <div>
             <p class="monthly-stat-card__value" id="monthly-stat-days">0 วัน</p>
             <p class="monthly-stat-card__label">วันที่ลงบันทึก</p>
           </div>
         </div>
         <div class="monthly-stat-card">
-          <span class="monthly-stat-card__icon" aria-hidden="true">🔥</span>
+          <span class="monthly-stat-card__icon material-symbols-rounded" aria-hidden="true">local_fire_department</span>
           <div>
             <p class="monthly-stat-card__value" id="monthly-stat-kcal">0 kcal</p>
             <p class="monthly-stat-card__label">พลังงานรวมเดือนนี้</p>
           </div>
         </div>
         <div class="monthly-stat-card">
-          <span class="monthly-stat-card__icon" aria-hidden="true">⚡</span>
+          <span class="monthly-stat-card__icon material-symbols-rounded" aria-hidden="true">bolt</span>
           <div>
             <p class="monthly-stat-card__value" id="monthly-stat-avg">0 kcal</p>
             <p class="monthly-stat-card__label">เฉลี่ยต่อวัน (วันที่บันทึก)</p>
           </div>
         </div>
         <div class="monthly-stat-card">
-          <span class="monthly-stat-card__icon" aria-hidden="true">⏰</span>
+          <span class="monthly-stat-card__icon material-symbols-rounded" aria-hidden="true">schedule</span>
           <div>
             <p class="monthly-stat-card__value" id="monthly-stat-ontime">0%</p>
             <p class="monthly-stat-card__label">มื้อตรงเวลา</p>
@@ -390,7 +425,7 @@
 
       <div class="monthly-chart-wrap">
         <div class="monthly-chart-header">
-          <span class="monthly-chart-title">📈 พลังงานรายวัน (kcal)</span>
+          <span class="monthly-chart-title"><span class="material-symbols-rounded" aria-hidden="true">bar_chart</span>พลังงานรายวัน (kcal)</span>
           <span class="monthly-chart-sub" id="monthly-chart-sub">แตะแท่งกราฟเพื่อดูรายละเอียดวันนั้น</span>
         </div>
         <div class="monthly-chart-container" id="monthly-chart-container"></div>
@@ -401,8 +436,10 @@
         <div class="monthly-days-list" id="monthly-days-list"></div>
       </div>
     </section>
+    </div>
 
-    <section class="card" aria-labelledby="settings-heading">
+    <div class="progress-tab-panel" id="progress-panel-settings" role="tabpanel" aria-labelledby="progress-tab-settings" data-progress-panel="settings" hidden>
+    <section class="card settings-card" aria-labelledby="settings-heading">
       <h2 id="settings-heading" class="card__eyebrow">ตั้งเวลามื้ออาหาร</h2>
       <form id="settings-form" class="form">
         <div class="field">
@@ -422,11 +459,12 @@
       </form>
     </section>
 
-    <section class="card" aria-labelledby="clear-data-heading">
+    <section class="card danger-card" aria-labelledby="clear-data-heading">
       <h2 id="clear-data-heading" class="card__eyebrow">จัดการข้อมูล</h2>
       <p class="field-hint">ข้อมูลทั้งหมดถูกเก็บไว้ในอุปกรณ์นี้เท่านั้น ไม่ถูกส่งออกไปที่ใด</p>
       <button type="button" class="btn btn--danger btn--full" id="clear-data-btn">ล้างข้อมูลทั้งหมด</button>
     </section>
+    </div>
 
     <p class="disclaimer">ข้อมูลพลังงานและโภชนาการในแอปเป็นค่าประมาณเพื่อการศึกษาเท่านั้น ไม่ใช่การวินิจฉัยหรือคำแนะนำทางการแพทย์ และไม่ควรใช้แทนคำแนะนำจากผู้เชี่ยวชาญด้านสุขภาพ</p>
   </section>
@@ -536,9 +574,13 @@
     <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">edit_note</span>
     <span>บันทึก</span>
   </button>
-  <button type="button" class="bottom-nav__item" data-nav="progress">
+  <button type="button" class="bottom-nav__item" data-nav="progress" data-progress-target="summary">
     <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">monitoring</span>
     <span>สรุป</span>
+  </button>
+  <button type="button" class="bottom-nav__item" data-nav="progress" data-progress-target="settings">
+    <span class="bottom-nav__icon material-symbols-rounded" aria-hidden="true">settings</span>
+    <span>ตั้งค่า</span>
   </button>
 </nav>
 

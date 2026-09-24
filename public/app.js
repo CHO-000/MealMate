@@ -394,6 +394,7 @@
 
   var selectedLogDate = todayStr();
   var selectedHistoryMonth = monthKeyOf(todayStr());
+  var activeProgressTab = "summary";
 
   function monthKeyOf(dateStr) {
     if (!dateStr || dateStr.length < 7) return "";
@@ -715,6 +716,23 @@
     var container = document.getElementById("planner-results");
     container.innerHTML = "";
 
+    var criteriaSummary = document.getElementById("planner-criteria-summary");
+    if (criteriaSummary) {
+      criteriaSummary.innerHTML = "";
+      [
+        MEAL_LABELS[criteria.meal] || criteria.meal,
+        "≤ " + criteria.time + " นาที",
+        "≤ " + criteria.budget + " บาท",
+        GOAL_LABELS[criteria.goal] || criteria.goal,
+        DIET_LABELS[criteria.diet] || criteria.diet
+      ].forEach(function (label) {
+        var chip = document.createElement("span");
+        chip.textContent = label;
+        criteriaSummary.appendChild(chip);
+      });
+      criteriaSummary.hidden = false;
+    }
+
     var aiWrap = document.getElementById("ai-suggest-wrap");
     var aiNote = document.getElementById("ai-suggest-note");
     aiNote.textContent = "";
@@ -749,7 +767,7 @@
     var wrap = document.createElement("div");
     wrap.className = "empty-state";
     wrap.innerHTML =
-      '<span class="empty-state__icon" aria-hidden="true">🍽️</span>' +
+      '<span class="empty-state__icon material-symbols-rounded" aria-hidden="true">restaurant_menu</span>' +
       '<p class="empty-state__title">ยังไม่เจอเมนูที่ตรงทุกเงื่อนไข</p>' +
       '<p>ลองปรับตัวเลือกดูนะ ไม่เป็นไรเลย</p>' +
       '<ul class="empty-state__tips">' +
@@ -780,11 +798,11 @@
       '<div><p class="menu-card__name">' + escapeHtml(item.name) + "</p></div>" +
       "</div>" +
       '<div class="menu-card__meta">' +
-      "<span>฿" + item.price + "</span>" +
-      "<span>⏱ " + item.time + " นาที</span>" +
-      "<span>🔥 " + item.calories + " kcal</span>" +
-      "<span>💪 โปรตีน " + item.protein + " ก.</span>" +
-      "<span>🥗 " + item.groups.length + " หมู่</span>" +
+      '<span><i class="material-symbols-rounded" aria-hidden="true">sell</i>' + item.price + " บาท</span>" +
+      '<span><i class="material-symbols-rounded" aria-hidden="true">schedule</i>' + item.time + " นาที</span>" +
+      '<span><i class="material-symbols-rounded" aria-hidden="true">local_fire_department</i>' + item.calories + " kcal</span>" +
+      '<span><i class="material-symbols-rounded" aria-hidden="true">fitness_center</i>โปรตีน ' + item.protein + " ก.</span>" +
+      '<span><i class="material-symbols-rounded" aria-hidden="true">nutrition</i>' + item.groups.length + " หมู่</span>" +
       "</div>" +
       '<div class="menu-card__tags">' +
       '<span class="tag">' + GOAL_LABELS[item.goal[0]] + "</span>" +
@@ -1064,9 +1082,11 @@
 
   function renderLogPage() {
     var datePicker = document.getElementById("log-date-picker");
+    var dateLabel = document.getElementById("log-date-label");
     if (datePicker && datePicker.value !== selectedLogDate) {
       datePicker.value = selectedLogDate;
     }
+    if (dateLabel) dateLabel.textContent = formatThaiDate(parseYmd(selectedLogDate));
 
     var isToday = (selectedLogDate === todayStr());
     var headingEl = document.getElementById("log-list-heading");
@@ -1108,7 +1128,7 @@
       var statusText = log.onTime ? "ตรงเวลา" : "ไม่ตรงเวลา";
 
       li.innerHTML =
-        '<span class="log-item__emoji" aria-hidden="true">' + (log.emoji || "🍽️") + "</span>" +
+        '<span class="log-item__emoji material-symbols-rounded" aria-hidden="true">restaurant</span>' +
         '<div class="log-item__info">' +
         '<p class="log-item__name">' + escapeHtml(log.name) + "</p>" +
         '<p class="log-item__meta">' +
@@ -1118,8 +1138,8 @@
         "</p>" +
         "</div>" +
         '<div class="log-item__actions">' +
-        '<button type="button" class="log-item__share" aria-label="แชร์รายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '">📤</button>' +
-        '<button type="button" class="log-item__delete" aria-label="ลบรายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '">🗑️</button>' +
+        '<button type="button" class="log-item__share" aria-label="แชร์รายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '"><span class="material-symbols-rounded" aria-hidden="true">share</span></button>' +
+        '<button type="button" class="log-item__delete" aria-label="ลบรายการ ' + escapeHtml(log.name) + '" data-log-id="' + log.id + '"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>' +
         "</div>";
 
       var deleteBtn = li.querySelector(".log-item__delete");
@@ -1509,16 +1529,16 @@
       dayLogs.forEach(function (log) {
         var li = document.createElement("li");
         li.className = "day-history-meal-item";
-        var onTimeSymbol = log.onTime ? '<span style="color:#16a34a; font-weight:bold;">✓ ตรงเวลา</span>' : '<span style="color:#c0392b; font-weight:bold;">✕ ไม่ตรงเวลา</span>';
+        var onTimeSymbol = log.onTime ? '<span class="history-status history-status--ontime">ตรงเวลา</span>' : '<span class="history-status history-status--late">ไม่ตรงเวลา</span>';
         li.innerHTML =
           '<div class="day-history-meal-info">' +
-          '<span>' + (log.emoji || '🍽️') + '</span>' +
+          '<span class="material-symbols-rounded" aria-hidden="true">restaurant</span>' +
           '<span class="day-history-meal-name">' + escapeHtml(log.name) + '</span>' +
           '<span class="day-history-meal-tag">' + escapeHtml(mealDisplayLabel(log)) + '</span>' +
           '</div>' +
-          '<div style="display:flex; align-items:center; gap:8px;">' +
+          '<div class="day-history-meal-meta">' +
           '<span class="day-history-meal-kcal">' + log.calories + ' kcal</span>' +
-          '<span style="font-size:0.8rem;">' + onTimeSymbol + '</span>' +
+          onTimeSymbol +
           '</div>';
         ul.appendChild(li);
       });
@@ -1580,6 +1600,12 @@
     document.getElementById("setting-breakfast").value = state.settings.breakfast;
     document.getElementById("setting-lunch").value = state.settings.lunch;
     document.getElementById("setting-dinner").value = state.settings.dinner;
+    var breakfastPreview = document.getElementById("summary-setting-breakfast");
+    var lunchPreview = document.getElementById("summary-setting-lunch");
+    var dinnerPreview = document.getElementById("summary-setting-dinner");
+    if (breakfastPreview) breakfastPreview.textContent = state.settings.breakfast;
+    if (lunchPreview) lunchPreview.textContent = state.settings.lunch;
+    if (dinnerPreview) dinnerPreview.textContent = state.settings.dinner;
   }
 
   function handleProfileSubmit(e) {
@@ -1682,7 +1708,22 @@
   /* Navigation (SPA)                                                   */
   /* ------------------------------------------------------------------ */
 
-  function navigateTo(pageKey) {
+  function setProgressTab(tabKey) {
+    activeProgressTab = tabKey === "settings" ? "settings" : "summary";
+    document.querySelectorAll("[data-progress-tab]").forEach(function (tab) {
+      var isActive = tab.getAttribute("data-progress-tab") === activeProgressTab;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+    document.querySelectorAll("[data-progress-panel]").forEach(function (panel) {
+      var isActive = panel.getAttribute("data-progress-panel") === activeProgressTab;
+      panel.hidden = !isActive;
+      panel.classList.toggle("is-active", isActive);
+    });
+  }
+
+  function navigateTo(pageKey, progressTarget) {
+    if (pageKey === "progress") setProgressTab(progressTarget || "summary");
     document.body.setAttribute("data-active-page", pageKey);
     var pages = document.querySelectorAll(".page");
     pages.forEach(function (page) {
@@ -1692,6 +1733,9 @@
     var navItems = document.querySelectorAll(".bottom-nav__item");
     navItems.forEach(function (item) {
       var isActive = item.getAttribute("data-nav") === pageKey;
+      if (isActive && pageKey === "progress") {
+        isActive = (item.getAttribute("data-progress-target") || "summary") === activeProgressTab;
+      }
       item.classList.toggle("is-active", isActive);
       if (isActive) {
         item.setAttribute("aria-current", "page");
@@ -1704,7 +1748,9 @@
     if (pageKey === "log") renderLogPage();
     if (pageKey === "progress") renderProgressPage();
 
-    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }
 
   function renderAll() {
@@ -2396,6 +2442,7 @@
 
   function initDateNavigator() {
     var picker = document.getElementById("log-date-picker");
+    var displayBtn = document.getElementById("log-date-display");
     var prevBtn = document.getElementById("log-date-prev");
     var nextBtn = document.getElementById("log-date-next");
     var todayBtn = document.getElementById("log-date-today-btn");
@@ -2407,6 +2454,13 @@
           selectedLogDate = e.target.value;
           renderLogPage();
         }
+      });
+    }
+
+    if (displayBtn && picker) {
+      displayBtn.addEventListener("click", function () {
+        if (typeof picker.showPicker === "function") picker.showPicker();
+        else picker.click();
       });
     }
 
@@ -2449,6 +2503,8 @@
   /* ------------------------------------------------------------------ */
 
   function init() {
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
     state = loadState();
     saveState();
     applyBangkokTimeTheme();
@@ -2458,9 +2514,29 @@
     // Navigation
     document.querySelectorAll("[data-nav]").forEach(function (el) {
       el.addEventListener("click", function () {
-        navigateTo(el.getAttribute("data-nav"));
+        var pageKey = el.getAttribute("data-nav");
+        navigateTo(pageKey, pageKey === "progress" ? (el.getAttribute("data-progress-target") || "summary") : null);
       });
     });
+
+    document.querySelectorAll("[data-progress-tab]").forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        navigateTo("progress", tab.getAttribute("data-progress-tab"));
+      });
+    });
+
+    var plannerEditAction = document.getElementById("planner-edit-action");
+    if (plannerEditAction) {
+      plannerEditAction.addEventListener("click", function () {
+        document.getElementById("planner-meal").focus();
+        document.getElementById("planner-form").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    var plannerAdvanced = document.querySelector(".planner-advanced");
+    if (plannerAdvanced && window.matchMedia("(max-width: 639px)").matches) {
+      plannerAdvanced.removeAttribute("open");
+    }
 
     // Forms
     document.getElementById("planner-form").addEventListener("submit", handlePlannerSubmit);
