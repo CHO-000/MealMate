@@ -4453,3 +4453,141 @@ body[data-active-page="home"] .chat-fab:not([hidden]) {
     grid-column: auto;
   }
 }
+
+/* AI-first planner: compact text results, without decorative meal images. */
+#page-planner .menu-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto auto;
+  column-gap: 20px;
+  padding: 18px 0;
+}
+
+#page-planner .menu-card__header,
+#page-planner .menu-card__meta,
+#page-planner .menu-card__tags,
+#page-planner .menu-card__reason {
+  grid-column: 1;
+}
+
+#page-planner .menu-card__save {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+}
+
+.menu-card__reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 9px;
+  color: #587069;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.menu-card__reason .material-symbols-rounded {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--color-primary);
+  font-size: 17px;
+}
+
+.planner-source-note {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf7f0;
+  color: #28634f;
+  font-size: 0.78rem;
+}
+
+.planner-source-note.is-fallback {
+  background: #fff4df;
+  color: #7a5011;
+}
+
+.planner-placeholder--loading strong {
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.planner-placeholder--loading small {
+  color: var(--color-text-muted);
+}
+
+.planner-loading-icon {
+  animation: planner-spin 0.9s linear infinite;
+}
+
+@keyframes planner-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* iOS Safari gives time inputs a large intrinsic inline size. Every settings
+   descendant must be allowed to shrink within its card. */
+.progress-tab-panel[data-progress-panel="settings"],
+.settings-card,
+.danger-card,
+#settings-form,
+#settings-form .field {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.settings-card {
+  overflow: hidden;
+}
+
+#settings-form input[type="time"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+#settings-form input[type="time"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #page-planner .menu-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  #page-planner .menu-card__save {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    width: auto;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  #page-planner .menu-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 15px 0;
+  }
+
+  #page-planner .menu-card__header,
+  #page-planner .menu-card__meta,
+  #page-planner .menu-card__tags,
+  #page-planner .menu-card__reason,
+  #page-planner .menu-card__save {
+    grid-column: 1;
+  }
+
+  #page-planner .menu-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  #page-planner .menu-card__save {
+    grid-row: auto;
+    width: 100%;
+    margin-top: 11px;
+  }
+}

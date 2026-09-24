@@ -165,7 +165,7 @@
     <div class="page-heading">
       <p class="page-kicker">แนะนำเมนู</p>
       <h1 id="planner-heading" class="page-title">แนะนำเมนู</h1>
-      <p class="page-subtitle">บอกเวลาและงบที่มี เดี๋ยวเราช่วยเลือกให้</p>
+      <p class="page-subtitle">บอกเวลาและงบที่มี ให้ AI ช่วยคิดเมนูที่เหมาะกับคุณ</p>
     </div>
 
     <div class="planner-layout">
@@ -233,7 +233,7 @@
       </div>
       </details>
 
-      <button type="submit" class="btn btn--primary btn--full"><span>แนะนำเมนูให้ฉัน</span><span aria-hidden="true">→</span></button>
+      <button type="submit" class="btn btn--primary btn--full" id="planner-submit-btn"><span>ให้ AI แนะนำเมนู</span><span aria-hidden="true">→</span></button>
     </form>
 
     <div class="planner-output card">
@@ -243,15 +243,9 @@
       </div>
       <div class="planner-criteria-summary" id="planner-criteria-summary" aria-label="เงื่อนไขที่เลือก" hidden></div>
       <section id="planner-results" class="planner-results" aria-live="polite">
-        <div class="planner-placeholder"><span class="material-symbols-rounded" aria-hidden="true">restaurant_menu</span><p>เลือกเงื่อนไขแล้วกด “แนะนำเมนูให้ฉัน”</p></div>
+        <div class="planner-placeholder"><span class="material-symbols-rounded" aria-hidden="true">smart_toy</span><p>เลือกเงื่อนไขแล้วให้ AI ช่วยคิดเมนู</p></div>
       </section>
-
-      <section class="ai-block" id="ai-suggest-wrap" hidden aria-labelledby="ai-suggest-heading">
-        <span class="material-symbols-rounded" aria-hidden="true">smart_toy</span>
-        <div><h2 id="ai-suggest-heading">อยากรู้ว่าทำไมเราถึงแนะนำเมนูเหล่านี้?</h2><p>AI จะอธิบายจากเมนูที่ระบบคัดเลือกไว้ โดยไม่เปลี่ยนผลลัพธ์เดิม</p></div>
-        <button type="button" class="btn btn--ghost btn--ai" id="ai-suggest-btn">ดูคำอธิบาย</button>
-        <p class="ai-note" id="ai-suggest-note" aria-live="polite"></p>
-      </section>
+      <p class="planner-source-note" id="planner-source-note" role="status" aria-live="polite" hidden></p>
     </div>
     </div>
   </section>

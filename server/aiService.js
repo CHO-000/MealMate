@@ -65,6 +65,7 @@ async function chatCompletion(messages, options) {
         model: options.model || MODEL,
         messages: messages,
         temperature: typeof options.temperature === "number" ? options.temperature : 0.7,
+        max_tokens: typeof options.maxTokens === "number" ? options.maxTokens : undefined,
         stream: false
       },
       { signal: controller.signal }

@@ -5,7 +5,7 @@
    the network/browser instead of crashing the page.
    ========================================================================== */
 
-var CACHE_NAME = "mealmate-cache-v8-option-a-responsive";
+var CACHE_NAME = "mealmate-cache-v9-ai-planner-ios-fix";
 var ASSETS_TO_CACHE = [
   "./",
   "./index.html",

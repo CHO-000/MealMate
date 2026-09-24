@@ -1,11 +1,9 @@
 /* ==========================================================================
    MealMate – มื้อดีมีเวลา
-   Vanilla JS single-page app. Core planner/log/progress logic never depends
-   on a server — it works standalone with just localStorage, same as the
-   static version. The AI features below (suggestion explanations, chat,
-   encouragement) are optional calls to this app's own backend (same origin,
-   /api/ai/*), which proxies to KKU IntelSphere. If that backend isn't
-   present or unreachable, those UI pieces simply stay hidden.
+   Vanilla JS single-page app. Logs and progress work standalone with
+   localStorage. The planner uses the app's same-origin AI backend first and
+   falls back to the local menu list when AI is unavailable. API keys remain
+   server-side and no meal images are sent to the model.
    ========================================================================== */
 
 (function () {
@@ -712,55 +710,94 @@
     return Math.round(total * 10) / 10;
   }
 
-  function renderPlannerResults(criteria) {
+  function renderPlannerCriteria(criteria) {
+    var criteriaSummary = document.getElementById("planner-criteria-summary");
+    if (!criteriaSummary) return;
+
+    criteriaSummary.innerHTML = "";
+    [
+      MEAL_LABELS[criteria.meal] || criteria.meal,
+      "≤ " + criteria.time + " นาที",
+      "≤ " + criteria.budget + " บาท",
+      GOAL_LABELS[criteria.goal] || criteria.goal,
+      DIET_LABELS[criteria.diet] || criteria.diet
+    ].forEach(function (label) {
+      var chip = document.createElement("span");
+      chip.textContent = label;
+      criteriaSummary.appendChild(chip);
+    });
+    criteriaSummary.hidden = false;
+  }
+
+  function getLocalPlannerCandidates(criteria) {
+    var scored = filterMenus(criteria).map(function (item) {
+      return { item: item, score: scoreMenu(item, criteria) };
+    });
+    scored.sort(function (a, b) { return b.score - a.score; });
+    return scored.slice(0, 3).map(function (entry) { return entry.item; });
+  }
+
+  function setPlannerSubmitLoading(isLoading) {
+    var btn = document.getElementById("planner-submit-btn");
+    if (!btn) return;
+    btn.disabled = isLoading;
+    btn.innerHTML = isLoading
+      ? '<span class="material-symbols-rounded planner-loading-icon" aria-hidden="true">progress_activity</span><span>AI กำลังคิดเมนู...</span>'
+      : '<span>ให้ AI แนะนำเมนู</span><span aria-hidden="true">→</span>';
+  }
+
+  function renderPlannerMenuList(items, sourceMessage, isFallback) {
     var container = document.getElementById("planner-results");
+    var sourceNote = document.getElementById("planner-source-note");
     container.innerHTML = "";
 
-    var criteriaSummary = document.getElementById("planner-criteria-summary");
-    if (criteriaSummary) {
-      criteriaSummary.innerHTML = "";
-      [
-        MEAL_LABELS[criteria.meal] || criteria.meal,
-        "≤ " + criteria.time + " นาที",
-        "≤ " + criteria.budget + " บาท",
-        GOAL_LABELS[criteria.goal] || criteria.goal,
-        DIET_LABELS[criteria.diet] || criteria.diet
-      ].forEach(function (label) {
-        var chip = document.createElement("span");
-        chip.textContent = label;
-        criteriaSummary.appendChild(chip);
-      });
-      criteriaSummary.hidden = false;
-    }
-
-    var aiWrap = document.getElementById("ai-suggest-wrap");
-    var aiNote = document.getElementById("ai-suggest-note");
-    aiNote.textContent = "";
-    aiWrap.hidden = true;
-    lastPlannerCandidates = [];
-    lastPlannerCriteria = null;
-
-    var filtered = filterMenus(criteria);
-
-    if (filtered.length === 0) {
+    if (!items.length) {
       container.appendChild(buildEmptyState());
+      sourceNote.hidden = true;
       return;
     }
 
-    var scored = filtered.map(function (item) {
-      return { item: item, score: scoreMenu(item, criteria) };
+    items.forEach(function (item) {
+      container.appendChild(buildMenuCard(item));
     });
 
-    scored.sort(function (a, b) { return b.score - a.score; });
+    sourceNote.classList.toggle("is-fallback", !!isFallback);
+    sourceNote.textContent = sourceMessage;
+    sourceNote.hidden = false;
+  }
 
-    var top3 = scored.slice(0, 3);
-    top3.forEach(function (entry) {
-      container.appendChild(buildMenuCard(entry.item));
-    });
+  function renderPlannerResults(criteria) {
+    var container = document.getElementById("planner-results");
+    var sourceNote = document.getElementById("planner-source-note");
+    renderPlannerCriteria(criteria);
+    sourceNote.hidden = true;
+    container.innerHTML =
+      '<div class="planner-placeholder planner-placeholder--loading">' +
+      '<span class="material-symbols-rounded planner-loading-icon" aria-hidden="true">progress_activity</span>' +
+      '<p><strong>AI กำลังคิดเมนูที่เหมาะกับคุณ</strong><br><small>ใช้เฉพาะเงื่อนไขที่กรอก ไม่ส่งรูปภาพ</small></p>' +
+      "</div>";
+    setPlannerSubmitLoading(true);
 
-    lastPlannerCandidates = top3.map(function (entry) { return entry.item; });
-    lastPlannerCriteria = criteria;
-    if (aiFeaturesAvailable) aiWrap.hidden = false;
+    apiPost("/api/ai/plan-menu", { criteria: criteria })
+      .then(function (data) {
+        var menus = Array.isArray(data && data.menus) ? data.menus : [];
+        if (menus.length !== 3) throw new Error("AI ส่งเมนูมาไม่ครบ");
+        renderPlannerMenuList(
+          menus,
+          "สร้างโดย AI จากเงื่อนไขของคุณโดยตรง · ราคาและโภชนาการเป็นค่าประมาณ",
+          false
+        );
+      })
+      .catch(function () {
+        renderPlannerMenuList(
+          getLocalPlannerCandidates(criteria),
+          "AI ใช้งานไม่ได้ชั่วคราว จึงแสดงเมนูสำรองจากระบบเดิมให้ก่อน",
+          true
+        );
+      })
+      .finally(function () {
+        setPlannerSubmitLoading(false);
+      });
   }
 
   function buildEmptyState() {
@@ -793,7 +830,6 @@
     var groupNames = item.groups.map(function (g) { return GROUP_LABELS[g]; }).join(", ");
 
     card.innerHTML =
-      '<img class="menu-card__image" src="' + escapeHtml(item.image || "./assets/breakfast-hero.png") + '" alt="' + escapeHtml(item.name) + '">' +
       '<div class="menu-card__header">' +
       '<div><p class="menu-card__name">' + escapeHtml(item.name) + "</p></div>" +
       "</div>" +
@@ -808,6 +844,7 @@
       '<span class="tag">' + GOAL_LABELS[item.goal[0]] + "</span>" +
       '<span class="tag tag--accent">' + groupNames + "</span>" +
       "</div>" +
+      (item.reason ? '<p class="menu-card__reason"><span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span>' + escapeHtml(item.reason) + "</p>" : "") +
       '<button type="button" class="btn btn--primary menu-card__save" data-menu-id="' + item.id + '">บันทึกมื้อนี้</button>';
 
     var saveBtn = card.querySelector(".menu-card__save");
@@ -1780,8 +1817,6 @@
   /* ------------------------------------------------------------------ */
 
   var aiFeaturesAvailable = false;
-  var lastPlannerCandidates = [];
-  var lastPlannerCriteria = null;
   var chatHistory = [];
   var chatOpen = false;
 
@@ -1819,33 +1854,6 @@
         // No backend reachable (e.g. running as a plain static site) —
         // the app keeps working exactly like the static version.
         aiFeaturesAvailable = false;
-      });
-  }
-
-  function handleAiSuggestClick() {
-    var btn = document.getElementById("ai-suggest-btn");
-    var note = document.getElementById("ai-suggest-note");
-
-    if (lastPlannerCandidates.length === 0 || !lastPlannerCriteria) return;
-
-    btn.disabled = true;
-    note.classList.add("is-loading");
-    note.textContent = "AI กำลังช่วยอธิบาย...";
-
-    apiPost("/api/ai/suggest", {
-      criteria: lastPlannerCriteria,
-      candidates: lastPlannerCandidates
-    })
-      .then(function (data) {
-        note.classList.remove("is-loading");
-        note.textContent = (data && data.message) || "ขออภัย AI ไม่ได้ตอบข้อความมา";
-      })
-      .catch(function (err) {
-        note.classList.remove("is-loading");
-        note.textContent = err.message || "เชื่อมต่อ AI ไม่สำเร็จ ลองใหม่อีกครั้งนะ";
-      })
-      .finally(function () {
-        btn.disabled = false;
       });
   }
 
@@ -1963,7 +1971,6 @@
   function initAiFeatures() {
     checkAiAvailability();
 
-    document.getElementById("ai-suggest-btn").addEventListener("click", handleAiSuggestClick);
     document.getElementById("ai-encourage-btn").addEventListener("click", handleAiEncourageClick);
 
     // Auto-estimate calories: fire while the user pauses typing the name,
