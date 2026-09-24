@@ -143,7 +143,8 @@ app.post("/api/ai/plan-menu", async function (req, res) {
       "ราคา เวลา พลังงาน และโปรตีนเป็นค่าประมาณสำหรับ 1 ที่ แต่ต้องไม่เกินข้อจำกัดด้านงบและเวลา " +
       "groups ใช้ได้เฉพาะ carb, protein, veggie, fruit, fat และ reason เป็นเหตุผลภาษาไทยสั้น ๆ 1 ประโยค " +
       "ตอบเป็น JSON เท่านั้น ห้ามใช้ markdown หรือข้อความประกอบ ตามรูปแบบนี้: " +
-      '{"menus":[{"name":"ชื่อเมนู","price":45,"time":15,"calories":500,"protein":25,"groups":["carb","protein"],"reason":"เหตุผลสั้น ๆ"}]}';
+      '{"menus":[{"name":"ชื่อเมนู","price":45,"time":15,"calories":500,"protein":25,"groups":["carb","protein"],"reason":"เหตุผลสั้น ๆ"}]}\n' +
+      "/no_think";
 
     var text = await ai.chatCompletion(
       [
@@ -157,7 +158,7 @@ app.post("/api/ai/plan-menu", async function (req, res) {
         },
         { role: "user", content: userPrompt }
       ],
-      { temperature: 0.55, timeoutMs: 20000, maxTokens: 900 }
+      { temperature: 0.55, timeoutMs: 20000, maxTokens: 2200 }
     );
 
     var jsonText = String(text || "").trim();
