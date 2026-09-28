@@ -80,3 +80,43 @@
 - Syntax checks passed for frontend, service worker, server route, and AI wrapper.
 
 final result: passed
+
+## Thai typography overlap iteration (2026-09-28)
+
+### Source visual truth
+
+- Meal-name report: `C:/Users/chinn/AppData/Local/Temp/codex-clipboard-343b5677-fbe2-4586-8533-cbd86e21168e.png` (617×412 px). The focused issue is compressed Thai ascenders/tone marks in the next-meal eyebrow and `มื้อเช้า` display text.
+- Summary/Settings report: `C:/Users/chinn/AppData/Local/Temp/codex-clipboard-872a356e-6953-4417-a7b7-2aa5f0d046ab.png` (662×507 px). The focused issue is tight Thai display typography and insufficient separation between the title and tabs.
+
+### Rendered implementation evidence
+
+- Desktop Home: `work/qa-captures/thai-type-home-desktop.png`, viewport and screenshot 1180×820 px, density approximately 1×.
+- Desktop Settings: `work/qa-captures/thai-type-settings-desktop.png`, viewport and screenshot 1180×820 px, density approximately 1×.
+- Mobile Home: `work/qa-captures/thai-type-home-mobile.png`, viewport and screenshot 390×844 px, density approximately 1×.
+- Mobile Settings: `work/qa-captures/thai-type-settings-mobile.png`, viewport and screenshot 390×844 px, density approximately 1×.
+- Tablet landscape Settings: `work/qa-captures/thai-type-settings-tablet-landscape.png`, viewport and screenshot 844×390 px, density approximately 1×.
+- Focused combined comparisons: `work/qa-comparisons/thai-type-meal-before-after.png` and `work/qa-comparisons/thai-type-settings-before-after.png`. The user reports are cropped source evidence, so fidelity judgement is limited to typography clearance, hierarchy, and containment rather than whole-page proportions.
+
+### Findings and comparison history
+
+- P2 resolved — Thai meal names used a `line-height` of `1`, leaving inadequate room for Thai vowels and tone marks. Fix: increased the next-meal display line box to `1.22`, removed negative letter spacing, allowed visible glyph overflow, and added small block padding. Post-fix evidence shows an 8 px eyebrow-to-name gap and a 20 px name-to-time gap on mobile.
+- P2 resolved — page titles inherited a negative bottom margin and a tight `1.06` line height. Fix: removed the negative margin, raised the Thai title line height to `1.2`, added glyph-safe block padding, and retained an 8 px title-to-tabs gap.
+- P2 resolved — Summary/Settings supporting headings and labels had inconsistent Thai line boxes. Fix: applied `1.45` line height to progress-card headings, field labels, section titles, and tabs.
+- No regression — all three Settings time fields remain inside the card at 390×844 and 844×390; horizontal overflow is 0 px.
+
+### Required fidelity surfaces
+
+- Typography: Kanit loaded successfully at weight 700. Thai marks are no longer visually clipped or merged, display tracking is neutralized where necessary, and hierarchy remains unchanged.
+- Spacing/layout: next-meal content and Summary/Settings title rhythm now have explicit non-overlapping gaps. Cards, responsive grids, and navigation geometry are unchanged.
+- Colors/tokens: no color tokens changed.
+- Image quality/assets: existing MealMate logo and food imagery are unchanged and remain sharp at the tested sizes.
+- Copy/content: no user-facing copy changed.
+
+### Interaction and console checks
+
+- Home and Settings navigation were exercised at desktop, mobile portrait, and tablet landscape widths.
+- Browser font status was `loaded`; `document.fonts.check('700 32px Kanit')` returned true.
+- Browser console warning/error check returned no entries.
+- JavaScript syntax checks passed for the app, service worker, and server.
+
+final result: passed

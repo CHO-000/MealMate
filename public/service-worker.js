@@ -5,7 +5,7 @@
    the network/browser instead of crashing the page.
    ========================================================================== */
 
-var CACHE_NAME = "mealmate-cache-v10-new-brand-logo";
+var CACHE_NAME = "mealmate-cache-v11-thai-type-fix";
 var ASSETS_TO_CACHE = [
   "./",
   "./index.html",

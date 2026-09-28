@@ -4555,6 +4555,45 @@ body[data-active-page="home"] .chat-fab:not([hidden]) {
   text-align: center;
 }
 
+/* Thai display type needs more vertical room than Latin text. The previous
+   tight line heights clipped or visually merged tone marks in meal names and
+   the Summary/Settings heading, especially in iOS in-app browsers. */
+html[lang="th"] .page-title {
+  margin-bottom: 0;
+  padding-block: 0.08em 0.04em;
+  overflow: visible;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+html[lang="th"] .card--next-meal .card__eyebrow {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+html[lang="th"] .next-meal__name {
+  padding-block: 0.08em 0.04em;
+  overflow: visible;
+  line-height: 1.22;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+html[lang="th"] #page-progress .card__eyebrow,
+html[lang="th"] #page-progress .section-title,
+html[lang="th"] #page-progress label,
+html[lang="th"] #page-progress .progress-tab {
+  line-height: 1.45;
+}
+
+#page-progress > .page-title {
+  margin-bottom: 8px;
+}
+
+#page-progress > .progress-tabs {
+  margin-top: 0;
+}
+
 @media (min-width: 768px) and (max-width: 1023px) {
   #page-planner .menu-card {
     grid-template-columns: minmax(0, 1fr) auto;
